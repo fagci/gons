@@ -93,9 +93,9 @@ func check(paths []string, ip string, port string) {
 }
 
 func worker(paths []string) {
-	gen_ip := gen.WanIpGenerator()
-	for {
-		check(paths, gen_ip().String(), PORT)
+	generator := gen.NewIPGenerator(1024)
+	for ip := range generator.GenerateWAN() {
+		check(paths, ip.String(), PORT)
 	}
 }
 
