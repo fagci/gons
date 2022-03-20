@@ -66,12 +66,12 @@ func (r *RTSP) check(paths *[]string) {
 
 	defer r.conn.Close()
 
-	var code int
-	code, err = r.Request(r.Query("*"))
+	_, err = r.Request(r.Query("*"))
 	if err != nil {
 		return
 	}
 
+	var code int
 	code, err = r.Request(r.Query("/"))
 	if err != nil || code == 401 {
 		return

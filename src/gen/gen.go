@@ -15,7 +15,7 @@ type IPGenerator struct {
 func (g *IPGenerator) GenerateWAN() <-chan net.IP {
 	go func() {
 		for {
-			intip := rand.Intn(0xD0000000) + 0xFFFFFF
+			intip := g.r.Intn(0xD0000000) + 0xFFFFFF
 			if !((intip >= 0x0A000000 && intip <= 0x0AFFFFFF) ||
 				(intip >= 0x64400000 && intip <= 0x647FFFFF) ||
 				(intip >= 0x7F000000 && intip <= 0x7FFFFFFF) ||
@@ -40,8 +40,8 @@ func (g *IPGenerator) GenerateWAN() <-chan net.IP {
 }
 
 func NewIPGenerator(capacity int) *IPGenerator {
-	rand.Seed(time.Now().UnixNano()) // TODO: make local source
 	return &IPGenerator{
 		ch: make(chan net.IP, capacity),
+        r: rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
