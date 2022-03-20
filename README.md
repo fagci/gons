@@ -1,3 +1,3 @@
-# Netrandom things in GO
+# Netstalking things in GO
 
 - RTSP fuzzer
