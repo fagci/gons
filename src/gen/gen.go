@@ -39,9 +39,9 @@ func (g *IPGenerator) GenerateWAN() <-chan net.IP {
 	return g.ch
 }
 
-func NewIPGenerator(capacity int) IPGenerator {
-    rand.Seed(time.Now().UnixNano()) // TODO: make local source
-	return IPGenerator{
+func NewIPGenerator(capacity int) *IPGenerator {
+	rand.Seed(time.Now().UnixNano()) // TODO: make local source
+	return &IPGenerator{
 		ch: make(chan net.IP, capacity),
 	}
 }
