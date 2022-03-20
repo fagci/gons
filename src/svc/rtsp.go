@@ -53,7 +53,7 @@ func (r *RTSP) Query(path string) string {
 	return fmt.Sprintf(RTSP_HDR, method, path, r.cseq)
 }
 
-func (r *RTSP) check(paths *[]string) {
+func (r *RTSP) check(paths []string) {
 	defer close(r.ch)
 	d := net.Dialer{Timeout: time.Second * 2}
 	var err error
@@ -82,7 +82,7 @@ func (r *RTSP) check(paths *[]string) {
 		return
 	}
 
-	for _, path := range *paths {
+	for _, path := range paths {
 		code, err = r.Request(r.Query(path))
 		if err != nil || code == 401 {
 			return
@@ -94,7 +94,7 @@ func (r *RTSP) check(paths *[]string) {
 	}
 }
 
-func (r *RTSP) CheckPaths(paths *[]string) <-chan string {
+func (r *RTSP) CheckPaths(paths []string) <-chan string {
 	go r.check(paths)
 	return r.ch
 }

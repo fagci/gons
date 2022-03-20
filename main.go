@@ -10,7 +10,7 @@ import (
 func worker(generator *gen.IPGenerator) {
 	for ip := range generator.GenerateWAN() {
 		rtsp := svc.NewRTSP(ip.String() + ":554")
-		for path := range rtsp.CheckPaths(&svc.RTSP_PATHS) {
+		for path := range rtsp.CheckPaths(svc.RTSP_PATHS) {
 			fmt.Println(path)
 		}
 	}
