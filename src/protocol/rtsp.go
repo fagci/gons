@@ -18,6 +18,11 @@ type RTSP struct {
 	ch    chan string
 }
 
+const _RTSP_TPL = "%s %s RTSP/1.0\r\n" +
+	"CSeq: %d\r\n" +
+	"User-Agent: LibVLC/3.0.0\r\n" +
+	"Accept: application/sdp\r\n\r\n"
+
 func (r *RTSP) Request(req string) (int, error) {
 	if _, e := r.conn.Write([]byte(req)); e != nil {
 		return 0, e
@@ -37,18 +42,13 @@ func (r *RTSP) Request(req string) (int, error) {
 }
 
 func (r *RTSP) Query(path string) string {
-	var method string
+	method := "DESCRIBE"
 
 	if path == "*" {
 		method = "OPTIONS"
-	} else {
-		method = "DESCRIBE"
 	}
 
-	return fmt.Sprintf("%s %s RTSP/1.0\r\n"+
-		"CSeq: %d\r\n"+
-		"User-Agent: LibVLC/3.0.0\r\n"+
-		"Accept: application/sdp\r\n\r\n", method, path, r.cseq)
+	return fmt.Sprintf(_RTSP_TPL, method, path, r.cseq)
 }
 
 func (r *RTSP) Check() <-chan string {
@@ -62,16 +62,13 @@ func (r *RTSP) check() {
 	d := net.Dialer{Timeout: time.Second * 2}
 	var err error
 
-	r.conn, err = d.Dial("tcp", address)
-
-	if err != nil {
+	if r.conn, err = d.Dial("tcp", address); err != nil {
 		return
 	}
 
 	defer r.conn.Close()
 
-	_, err = r.Request(r.Query("*"))
-	if err != nil {
+	if _, err = r.Request(r.Query("*")); err != nil {
 		return
 	}
 

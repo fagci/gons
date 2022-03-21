@@ -20,7 +20,7 @@ func main() {
 		os.Exit(1)
 	}
 
-    ipGenerator := generators.NewIPGenerator(1024)
+	ipGenerator := generators.NewIPGenerator(1024)
 	processor := services.NewProcessor(ipGenerator, 1024)
 
 	if *scanRtsp {
