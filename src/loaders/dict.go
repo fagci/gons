@@ -13,6 +13,7 @@ func NewDictLoader() *DictLoader {
 	return &DictLoader{}
 }
 
+// TODO: different types of dict with validation (IPs, URIs, ...)
 func (dictLoader *DictLoader) Load(path string) ([]string, error) {
 	file, err := os.Open(path)
 	if err != nil {
