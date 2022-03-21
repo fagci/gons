@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go_ns/src/gen"
-	"go_ns/src/loaders"
-	"go_ns/src/svc"
+	"go-ns/src/generators"
+	"go-ns/src/loaders"
+	"go-ns/src/services"
 	"os"
 )
 
@@ -20,14 +20,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	processor := svc.NewProcessor(gen.NewIPGenerator(1024), 1024)
+    ipGenerator := generators.NewIPGenerator(1024)
+	processor := services.NewProcessor(ipGenerator, 1024)
 
 	if *scanRtsp {
 		fmt.Println("using rtsp")
-		processor.AddService(svc.NewRTSPService(554, paths))
+		processor.AddService(services.NewRTSPService(554, paths))
 	}
 
 	for result := range processor.Process() {
-		fmt.Println(result.URI)
+		fmt.Println(result)
 	}
 }

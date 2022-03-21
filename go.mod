@@ -1,3 +1,3 @@
-module go_ns
+module go-ns
 
 go 1.17

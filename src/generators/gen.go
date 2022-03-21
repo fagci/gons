@@ -1,4 +1,4 @@
-package gen
+package generators
 
 import (
 	"encoding/binary"

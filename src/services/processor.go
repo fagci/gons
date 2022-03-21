@@ -1,23 +1,35 @@
-package svc
+package services
 
-import "go_ns/src/gen"
+import (
+	"fmt"
+	"go-ns/src/generators"
+)
 
 type Processor struct {
 	WorkersCount int
-	generator    *gen.IPGenerator
+	generator    *generators.IPGenerator
 	services     []Service
-	ch           chan Result
+	ch           chan string
 }
 
-func NewProcessor(generator *gen.IPGenerator, workersCount int) *Processor {
+func NewProcessor(generator *generators.IPGenerator, workersCount int) *Processor {
 	return &Processor{
 		WorkersCount: workersCount,
 		generator:    generator,
+		ch:           make(chan string),
 	}
 }
 
 func (p *Processor) AddService(svc Service) {
 	p.services = append(p.services, svc)
+}
+
+func (p *Processor) Process() <-chan string {
+	for i := 0; i < p.WorkersCount; i++ {
+		go p.work()
+	}
+
+	return p.ch
 }
 
 func (p *Processor) work() {
@@ -28,12 +40,4 @@ func (p *Processor) work() {
 			}
 		}
 	}
-}
-
-func (p *Processor) Process() <-chan Result {
-	for i := 0; i < p.WorkersCount; i++ {
-		go p.work()
-	}
-
-	return p.ch
 }
