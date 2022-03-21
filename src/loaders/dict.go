@@ -5,16 +5,7 @@ import (
 	"os"
 )
 
-type DictLoader struct {
-	items []string
-}
-
-func NewDictLoader() *DictLoader {
-	return &DictLoader{}
-}
-
-// TODO: different types of dict with validation (IPs, URIs, ...)
-func (dictLoader *DictLoader) Load(path string) ([]string, error) {
+func FileToArray(path string) ([]string, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -22,8 +13,9 @@ func (dictLoader *DictLoader) Load(path string) ([]string, error) {
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
+	var items []string
 	for scanner.Scan() {
-		dictLoader.items = append(dictLoader.items, scanner.Text())
+		items = append(items, scanner.Text())
 	}
-	return dictLoader.items, scanner.Err()
+	return items, scanner.Err()
 }

@@ -9,14 +9,19 @@ import (
 	"time"
 )
 
-type RTSP struct {
-	Address string
-	conn    net.Conn
-	cseq    int
-	ch      chan string
+type RTSPService struct {
+	Port  int
+	paths []string
 }
 
-const PORT = "554"
+type RTSP struct {
+	Host  string
+	Port  int
+	conn  net.Conn
+	cseq  int
+	paths []string
+	ch    chan Result
+}
 
 const RTSP_HDR = "%s %s RTSP/1.0\r\n" +
 	"CSeq: %d\r\n" +
@@ -53,12 +58,13 @@ func (r *RTSP) Query(path string) string {
 	return fmt.Sprintf(RTSP_HDR, method, path, r.cseq)
 }
 
-func (r *RTSP) check(paths []string) {
-	defer close(r.ch)
+func (r *RTSP) check() {
+    defer close(r.ch)
+	address := fmt.Sprintf("%s:%d", r.Host, r.Port)
 	d := net.Dialer{Timeout: time.Second * 2}
 	var err error
 
-	r.conn, err = d.Dial("tcp", r.Address)
+	r.conn, err = d.Dial("tcp", address)
 
 	if err != nil {
 		return
@@ -78,30 +84,45 @@ func (r *RTSP) check(paths []string) {
 	}
 
 	if code == 200 {
-		r.ch <- fmt.Sprintf("rtsp://%s/", r.Address)
+		r.ch <- Result{URI: fmt.Sprintf("rtsp://%s/", address)}
 		return
 	}
 
-	for _, path := range paths {
+	for _, path := range r.paths {
 		code, err = r.Request(r.Query(path))
 		if err != nil || code == 401 {
 			return
 		}
 		if code == 200 {
-			r.ch <- fmt.Sprintf("rtsp://%s%s", r.Address, path)
+			r.ch <- Result{URI: fmt.Sprintf("rtsp://%s%s", address, path)}
 			return
 		}
 	}
 }
 
-func (r *RTSP) CheckPaths(paths []string) <-chan string {
-	go r.check(paths)
+func (r *RTSP) Check() <-chan Result {
+	go r.check()
 	return r.ch
 }
 
-func NewRTSP(address string) *RTSP {
+func (rs *RTSPService) Check(host string) <-chan Result {
+    r := NewRTSP(host, rs.Port, rs.paths)
+    return r.Check()
+}
+
+
+func NewRTSP(host string, port int, paths []string) *RTSP {
 	return &RTSP{
-		Address: address,
-		ch:      make(chan string),
+		Host:  host,
+		Port:  port,
+		paths: paths,
+		ch:    make(chan Result),
+	}
+}
+
+func NewRTSPService(port int, paths []string) *RTSPService {
+	return &RTSPService{
+		Port:  port,
+		paths: paths,
 	}
 }
