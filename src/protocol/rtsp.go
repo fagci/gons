@@ -10,12 +10,13 @@ import (
 )
 
 type RTSP struct {
-	Host  string
-	Port  int
-	conn  net.Conn
-	cseq  int
-	paths []string
-	ch    chan string
+	Host    string
+	Port    int
+	timeout time.Duration
+	conn    net.Conn
+	cseq    int
+	paths   []string
+	ch      chan string
 }
 
 const _RTSP_TPL = "%s %s RTSP/1.0\r\n" +
@@ -29,11 +30,14 @@ func (r *RTSP) Request(req string) (int, error) {
 	}
 
 	m := make([]byte, 1024)
-	if _, e := r.conn.Read(m); e != nil {
+	n, e := r.conn.Read(m)
+    if e != nil {
 		return 0, e
 	}
 
-	f := strings.Fields(string(m))
+    resp := string(m[:n])
+
+	f := strings.Fields(resp)
 	if len(f) > 2 && strings.HasPrefix(f[0], "RTSP") {
 		return strconv.Atoi(f[1])
 	}
@@ -59,14 +63,14 @@ func (r *RTSP) Check() <-chan string {
 func (r *RTSP) check() {
 	defer close(r.ch)
 	address := fmt.Sprintf("%s:%d", r.Host, r.Port)
-	d := net.Dialer{Timeout: time.Second * 2}
 	var err error
 
-	if r.conn, err = d.Dial("tcp", address); err != nil {
+	if r.conn, err = net.DialTimeout("tcp", address, r.timeout); err != nil {
 		return
 	}
 
 	defer r.conn.Close()
+	r.conn.SetDeadline(time.Now().Add(time.Second * 5))
 
 	if _, err = r.Request(r.Query("*")); err != nil {
 		return
@@ -95,11 +99,12 @@ func (r *RTSP) check() {
 	}
 }
 
-func NewRTSP(host string, port int, paths []string) *RTSP {
+func NewRTSP(host string, port int, paths []string, timeout time.Duration) *RTSP {
 	return &RTSP{
-		Host:  host,
-		Port:  port,
-		paths: paths,
-		ch:    make(chan string),
+		Host:    host,
+		Port:    port,
+		timeout: timeout,
+		paths:   paths,
+		ch:      make(chan string),
 	}
 }

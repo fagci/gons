@@ -20,12 +20,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	ipGenerator := generators.NewIPGenerator(1024)
-	processor := services.NewProcessor(ipGenerator, 1024)
+	ipGenerator := generators.NewIPGenerator(128)
+	processor := services.NewProcessor(ipGenerator, 1500)
 
 	if *scanRtsp {
 		fmt.Println("using rtsp")
-		processor.AddService(services.NewRTSPService(554, paths))
+        rtspService := services.NewRTSPService(554, paths)
+		processor.AddService(rtspService)
 	}
 
 	for result := range processor.Process() {

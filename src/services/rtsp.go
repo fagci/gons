@@ -1,6 +1,9 @@
 package services
 
-import "go-ns/src/protocol"
+import (
+	"go-ns/src/protocol"
+	"time"
+)
 
 type RTSPService struct {
 	Port  int
@@ -15,6 +18,6 @@ func NewRTSPService(port int, paths []string) *RTSPService {
 }
 
 func (rs *RTSPService) Check(host string) <-chan string {
-	r := protocol.NewRTSP(host, rs.Port, rs.paths)
+	r := protocol.NewRTSP(host, rs.Port, rs.paths, time.Second * 2)
 	return r.Check()
 }
