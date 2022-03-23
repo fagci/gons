@@ -1,15 +1,14 @@
 #!/usr/bin/env sh
 
 url="$1"
-path="$2"
-date="$(date '+%Y%m%d-%H%M%S')"
+dir="$2"
+slug="$3"
+path="${dir}/${slug}.png"
 
-echo "${url} ${path} ${date}"
+mkdir -p "${dir}"
 
-mkdir -p "${path}"
+timeout 15 ffmpeg -loglevel error \
+        -y -rtsp_transport tcp -i "${url}" \
+        -pix_fmt yuvj422p -an -t 1 -r 1 \
+        "${path}" 2>&1
 
-timeout 30 ffmpeg -rtsp_transport tcp \
-    -y -i "${url}" \
-    -f image2 -vf fps=fps=2 -s 1024x768 "${path}/cap-${date}.jpg"
-
-exit 0
