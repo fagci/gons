@@ -39,7 +39,7 @@ func main() {
 		fmt.Println(result.Url.String())
 		if *resultCallback != "" {
 			wg.Add(1)
-            cmd := result.ReplaceVars(*resultCallback)
+			cmd := result.ReplaceVars(*resultCallback)
 			go utils.RunCommand(cmd, wg)
 		}
 	}
