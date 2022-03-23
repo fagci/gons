@@ -15,7 +15,6 @@ func NewProcessor(generator *generators.IPGenerator, workersCount int) *Processo
 	return &Processor{
 		WorkersCount: workersCount,
 		generator:    generator,
-		ch:           make(chan string),
 	}
 }
 
@@ -24,6 +23,9 @@ func (p *Processor) AddService(svc Service) {
 }
 
 func (p *Processor) Process() <-chan string {
+	p.ch = make(chan string)
+    // TODO: close channel when generator done
+
 	for i := 0; i < p.WorkersCount; i++ {
 		go p.work()
 	}
