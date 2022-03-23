@@ -12,6 +12,7 @@ import (
 func main() {
 	scanRtsp := flag.Bool("rtsp", false, "check rtsp")
 	fuzzDict := flag.String("d", "./data/rtsp-paths.txt", "dictionary to fuzz")
+	scanWorkers := flag.Int("w", 1024, "workers count")
 	flag.Parse()
 
 	paths, err := loaders.FileToArray(*fuzzDict)
@@ -21,11 +22,11 @@ func main() {
 	}
 
 	ipGenerator := generators.NewIPGenerator(128)
-	processor := services.NewProcessor(ipGenerator, 1500)
+	processor := services.NewProcessor(ipGenerator, *scanWorkers)
 
 	if *scanRtsp {
 		fmt.Println("using rtsp")
-        rtspService := services.NewRTSPService(554, paths)
+		rtspService := services.NewRTSPService(554, paths)
 		processor.AddService(rtspService)
 	}
 

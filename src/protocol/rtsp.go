@@ -3,6 +3,7 @@ package protocol
 import (
 	"errors"
 	"fmt"
+	"go-ns/src/generators"
 	"net"
 	"strconv"
 	"strings"
@@ -19,12 +20,18 @@ type RTSP struct {
 	ch      chan string
 }
 
+const RW_TIMEOUT = time.Second * 5
+
 const _RTSP_TPL = "%s %s RTSP/1.0\r\n" +
 	"CSeq: %d\r\n" +
 	"User-Agent: LibVLC/3.0.0\r\n" +
 	"Accept: application/sdp\r\n\r\n"
 
 func (r *RTSP) Request(req string) (int, error) {
+	r.cseq++
+	if e := r.conn.SetDeadline(time.Now().Add(RW_TIMEOUT)); e != nil {
+		return 0, e
+	}
 	if _, e := r.conn.Write([]byte(req)); e != nil {
 		return 0, e
 	}
@@ -57,6 +64,7 @@ func (r *RTSP) Query(path string) string {
 
 func (r *RTSP) Check() <-chan string {
 	r.ch = make(chan string)
+	r.cseq = 0
 	go r.check()
 	return r.ch
 }
@@ -71,14 +79,13 @@ func (r *RTSP) check() {
 	}
 
 	defer r.conn.Close()
-	r.conn.SetDeadline(time.Now().Add(time.Second * 5))
 
 	if _, err = r.Request(r.Query("*")); err != nil {
 		return
 	}
 
 	var code int
-	code, err = r.Request(r.Query("/"))
+	code, err = r.Request(r.Query(generators.RandomPath(6, 12)))
 	if err != nil || code == 401 {
 		return
 	}
