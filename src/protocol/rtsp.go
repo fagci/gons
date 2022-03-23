@@ -31,11 +31,11 @@ func (r *RTSP) Request(req string) (int, error) {
 
 	m := make([]byte, 1024)
 	n, e := r.conn.Read(m)
-    if e != nil {
+	if e != nil {
 		return 0, e
 	}
 
-    resp := string(m[:n])
+	resp := string(m[:n])
 
 	f := strings.Fields(resp)
 	if len(f) > 2 && strings.HasPrefix(f[0], "RTSP") {
@@ -56,6 +56,7 @@ func (r *RTSP) Query(path string) string {
 }
 
 func (r *RTSP) Check() <-chan string {
+	r.ch = make(chan string)
 	go r.check()
 	return r.ch
 }
@@ -105,6 +106,5 @@ func NewRTSP(host string, port int, paths []string, timeout time.Duration) *RTSP
 		Port:    port,
 		timeout: timeout,
 		paths:   paths,
-		ch:      make(chan string),
 	}
 }
