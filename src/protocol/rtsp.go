@@ -4,7 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"go-ns/src/generators"
+	"go-ns/src/models"
 	"net"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -17,7 +19,7 @@ type RTSP struct {
 	conn    net.Conn
 	cseq    int
 	paths   []string
-	ch      chan string
+	ch      chan models.Result
 }
 
 const RW_TIMEOUT = time.Second * 10
@@ -73,11 +75,21 @@ func (r *RTSP) Query(path string) string {
 	return fmt.Sprintf(_RTSP_TPL, method, path, r.cseq)
 }
 
-func (r *RTSP) Check() <-chan string {
-	r.ch = make(chan string)
+func (r *RTSP) Check() <-chan models.Result {
+	r.ch = make(chan models.Result)
 	r.cseq = 0
 	go r.check()
 	return r.ch
+}
+
+func (r *RTSP) result(path string) {
+	res := models.Result{}
+	res.Url = url.URL{
+		Scheme: "rtsp",
+		Host:   fmt.Sprintf("%s:%d", r.Host, r.Port),
+		Path:   path,
+	}
+	r.ch <- res
 }
 
 func (r *RTSP) check() {
@@ -104,7 +116,7 @@ func (r *RTSP) check() {
 	}
 
 	if code == 200 {
-		r.ch <- fmt.Sprintf("rtsp://%s/", address)
+		r.result("/")
 		return
 	}
 
@@ -114,7 +126,7 @@ func (r *RTSP) check() {
 			return
 		}
 		if code == 200 {
-			r.ch <- fmt.Sprintf("rtsp://%s%s", address, path)
+			r.result(path)
 			return
 		}
 	}

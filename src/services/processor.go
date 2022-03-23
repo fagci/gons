@@ -2,13 +2,14 @@ package services
 
 import (
 	"go-ns/src/generators"
+	"go-ns/src/models"
 )
 
 type Processor struct {
 	WorkersCount int
 	generator    *generators.IPGenerator
 	services     []Service
-	ch           chan string
+	ch           chan models.Result
 }
 
 func NewProcessor(generator *generators.IPGenerator, workersCount int) *Processor {
@@ -22,8 +23,8 @@ func (p *Processor) AddService(svc Service) {
 	p.services = append(p.services, svc)
 }
 
-func (p *Processor) Process() <-chan string {
-	p.ch = make(chan string)
+func (p *Processor) Process() <-chan models.Result {
+	p.ch = make(chan models.Result)
     // TODO: close channel when generator done
 
 	for i := 0; i < p.WorkersCount; i++ {
