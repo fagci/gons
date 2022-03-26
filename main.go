@@ -21,7 +21,7 @@ func main() {
 
 	paths, err := loaders.FileToArray(*fuzzDict)
 	if err != nil {
-		fmt.Println("Error:", err)
+		os.Stderr.WriteString(fmt.Sprintln("[E]", err))
 		os.Exit(1)
 	}
 
@@ -29,13 +29,13 @@ func main() {
 	processor := services.NewProcessor(ipGenerator, *scanWorkers)
 
 	if *scanRtsp {
-		fmt.Println("using rtsp")
+		os.Stderr.WriteString(fmt.Sprintln("[i] Using rtsp"))
 		rtspService := services.NewRTSPService(554, paths)
 		processor.AddService(rtspService)
 	}
 
 	if len(processor.Services()) == 0 {
-		fmt.Println("Specify at least one service to check")
+		os.Stderr.WriteString(fmt.Sprintln("[E] Specify at least one service to check"))
 		os.Exit(1)
 	}
 

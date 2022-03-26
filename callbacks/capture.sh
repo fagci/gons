@@ -12,4 +12,9 @@ timeout 30 \
     -i "$url" \
     -frames:v 1 -an \
     -y "$path" \
-    -loglevel warning 2>&1
+    -loglevel warning 2>&1 \
+    && ( \
+      (hash exiftool && exiftool -Comment="$url" "$path" && rm "${path}_original") \
+      || \
+      (hash jhead && jhead -cl "$url" "$path") \
+    )
