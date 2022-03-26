@@ -7,8 +7,9 @@ import (
 )
 
 func RunCommand(cmd string, wg *sync.WaitGroup) {
-	if _, err := exec.Command("bash", "-c", cmd).Output(); err != nil {
+	if out, err := exec.Command("sh", "-c", cmd).CombinedOutput(); err != nil {
 		fmt.Println("Cmd '", cmd, "' run failed:", err)
+		fmt.Println(string(out))
 	}
 	wg.Done()
 }

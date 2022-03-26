@@ -111,12 +111,15 @@ func (r *RTSP) check() {
 
 	var code int
 	code, err = r.Request(r.Query(generators.RandomPath(6, 12)))
-	if err != nil || code == 401 {
+	if err != nil {
 		return
 	}
 
 	if code == 200 {
-		r.result("/")
+		code, err = r.Request("/")
+		if err == nil && code == 200 {
+			r.result("/")
+		}
 		return
 	}
 
