@@ -1,9 +1,10 @@
 package generators
 
 import (
+	crypto_rand "crypto/rand"
+	"encoding/binary"
 	"math/rand"
 	"net"
-	"time"
 )
 
 type IPGenerator struct {
@@ -29,25 +30,30 @@ func (g *IPGenerator) GenerateWANIP() net.IP {
 			(intip >= 0xCB007100 && intip <= 0xCB0071FF) {
 			continue
 		}
-        break
+		break
 	}
-    return net.IPv4(byte(intip>>24), byte(intip>>16), byte(intip>>8), byte(intip))
+	return net.IPv4(byte(intip>>24), byte(intip>>16), byte(intip>>8), byte(intip))
 }
 
 func (g *IPGenerator) GenerateWAN() <-chan net.IP {
 	go func() {
-        g.ch <- g.GenerateWANIP()
+		g.ch <- g.GenerateWANIP()
 	}()
 
 	return g.ch
 }
 func (g *IPGenerator) Stop() {
-    close(g.ch)
+	close(g.ch)
 }
 
 func NewIPGenerator(capacity int) *IPGenerator {
+	b := make([]byte, 8)
+	_, err := crypto_rand.Read(b)
+	if err != nil {
+        panic("Cryptorandom seed failed: " + err.Error())
+	}
 	return &IPGenerator{
 		ch: make(chan net.IP, capacity),
-		r:  rand.New(rand.NewSource(time.Now().UnixNano())),
+		r:  rand.New(rand.NewSource(int64(binary.LittleEndian.Uint64(b)))),
 	}
 }
