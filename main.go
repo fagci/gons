@@ -11,11 +11,12 @@ import (
 	"sync"
 )
 
+var scanRtsp = flag.Bool("rtsp", false, "check rtsp")
+var fuzzDict = flag.String("d", "./data/rtsp-paths.txt", "dictionary to fuzz")
+var scanWorkers = flag.Int("w", 1024, "workers count")
+var resultCallback = flag.String("callback", "", "callback to run as shell command. Use {result} as template")
+
 func main() {
-	scanRtsp := flag.Bool("rtsp", false, "check rtsp")
-	fuzzDict := flag.String("d", "./data/rtsp-paths.txt", "dictionary to fuzz")
-	scanWorkers := flag.Int("w", 1024, "workers count")
-	resultCallback := flag.String("callback", "", "callback to run as shell command. Use {result} as template")
 	flag.Parse()
 
 	paths, err := loaders.FileToArray(*fuzzDict)
@@ -31,6 +32,11 @@ func main() {
 		fmt.Println("using rtsp")
 		rtspService := services.NewRTSPService(554, paths)
 		processor.AddService(rtspService)
+	}
+
+	if len(processor.Services()) == 0 {
+		fmt.Println("Specify at least one service to check")
+		os.Exit(1)
 	}
 
 	wg := new(sync.WaitGroup)

@@ -37,7 +37,9 @@ func (g *IPGenerator) GenerateWANIP() net.IP {
 
 func (g *IPGenerator) GenerateWAN() <-chan net.IP {
 	go func() {
-		g.ch <- g.GenerateWANIP()
+		for {
+			g.ch <- g.GenerateWANIP()
+		}
 	}()
 
 	return g.ch
@@ -50,7 +52,7 @@ func NewIPGenerator(capacity int) *IPGenerator {
 	b := make([]byte, 8)
 	_, err := crypto_rand.Read(b)
 	if err != nil {
-        panic("Cryptorandom seed failed: " + err.Error())
+		panic("Cryptorandom seed failed: " + err.Error())
 	}
 	return &IPGenerator{
 		ch: make(chan net.IP, capacity),

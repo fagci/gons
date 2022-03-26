@@ -23,9 +23,13 @@ func (p *Processor) AddService(svc Service) {
 	p.services = append(p.services, svc)
 }
 
+func (p *Processor) Services() []Service {
+	return p.services
+}
+
 func (p *Processor) Process() <-chan models.Result {
 	p.ch = make(chan models.Result)
-    // TODO: close channel when generator done
+	// TODO: close channel when generator done
 
 	for i := 0; i < p.WorkersCount; i++ {
 		go p.work()
