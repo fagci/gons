@@ -7,8 +7,5 @@ path="${dir}/${slug}.png"
 
 mkdir -p "${dir}"
 
-timeout 10 ffmpeg -loglevel error \
-        -y -rtsp_transport tcp -i "${url}" \
-        -pix_fmt yuvj422p -an -t 1 -r 1 \
-        "${path}" 2>&1
-
+timeout 20 ffmpeg -rtsp_transport tcp \
+    -i "$url" -vf fps=1/3 -pix_fmt yuvj420p -nostdin "$path" -y -loglevel error 2>&1
