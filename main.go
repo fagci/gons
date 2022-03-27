@@ -19,9 +19,9 @@ var scanWorkers = flag.Int("w", 1024, "workers count")
 var resultCallback = flag.String("callback", "", "callback to run as shell command. Use {result} as template")
 var resultCallbackConcurrency = flag.Int("cc", 30, "callback max concurrency")
 var resultCallbackTimeout = flag.Int("ct", 30, "callback timeout in seconds")
-var resultCallbackE = flag.Bool("ce", false, "show callback errors")
-var resultCallbackW = flag.Bool("cw", false, "show callback warnings")
-var resultCallbackI = flag.Bool("ci", false, "show callback info")
+var resultCallbackE = flag.Bool("dce", false, "disable callback errors")
+var resultCallbackW = flag.Bool("dcw", false, "disable callback warnings")
+var resultCallbackI = flag.Bool("dci", false, "disable callback info")
 
 var scanRtsp = flag.Bool("rtsp", false, "check rtsp")
 var rtspFuzzDict = flag.String("rtspd", "./data/rtsp-paths.txt", "RTSP dictionary to fuzz")
@@ -60,13 +60,13 @@ func main() {
 
 	callbackTimeout := time.Second * time.Duration(*resultCallbackTimeout)
 	var cbFlags utils.Flags
-	if *resultCallbackE {
+	if !*resultCallbackE {
 		cbFlags = cbFlags.Set(utils.ERR)
 	}
-	if *resultCallbackW {
+	if !*resultCallbackW {
 		cbFlags = cbFlags.Set(utils.WARN)
 	}
-	if *resultCallbackI {
+	if !*resultCallbackI {
 		cbFlags = cbFlags.Set(utils.INFO)
 	}
 
