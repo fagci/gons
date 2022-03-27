@@ -14,6 +14,7 @@ import (
 var scanRtsp = flag.Bool("rtsp", false, "check rtsp")
 var fuzzDict = flag.String("d", "./data/rtsp-paths.txt", "dictionary to fuzz")
 var scanWorkers = flag.Int("w", 1024, "workers count")
+var generateIps = flag.Int("gw", 0, "generate N random WAN IPs")
 var resultCallback = flag.String("callback", "", "callback to run as shell command. Use {result} as template")
 
 func main() {
@@ -26,6 +27,14 @@ func main() {
 	}
 
 	ipGenerator := generators.NewIPGenerator(128)
+
+	if *generateIps != 0 {
+		for i := 0; i < *generateIps; i++ {
+			fmt.Println(ipGenerator.GenerateWANIP())
+		}
+		return
+	}
+
 	processor := services.NewProcessor(ipGenerator, *scanWorkers)
 
 	if *scanRtsp {
