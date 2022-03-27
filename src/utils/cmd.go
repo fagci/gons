@@ -2,8 +2,6 @@ package utils
 
 import (
 	"bytes"
-	"fmt"
-	"os"
 	"os/exec"
 	"runtime"
 	"sync"
@@ -11,14 +9,14 @@ import (
 )
 
 func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration) {
-    defer wg.Done()
-    shell := "sh"
-    opt := "-c"
+	defer wg.Done()
+	shell := "sh"
+	opt := "-c"
 
-    if runtime.GOOS == "windows" {
-        shell = "cmd.exe"
-        opt = "/C"
-    }
+	if runtime.GOOS == "windows" {
+		shell = "cmd.exe"
+		opt = "/C"
+	}
 
 	cmd := exec.Command(shell, opt, command)
 
@@ -40,14 +38,16 @@ func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration) {
 	select {
 	case <-t:
 		cmd.Process.Kill()
-		os.Stderr.WriteString(fmt.Sprintln("[W] Cmd '" + command + "' timeout"))
+		EPrintln("[W] Cmd '" + command + "' timeout")
 	case err := <-done:
 		if err != nil {
-			os.Stderr.WriteString(fmt.Sprintln("[W] Cmd '"+command+"' run failed:", err))
-			os.Stderr.WriteString(fmt.Sprintln("[W] Out: " + stdout.String()))
-			os.Stderr.WriteString(fmt.Sprintln("[W] Err: " + stderr.String()))
-            return
+			EPrintln("[W] Cmd '"+command+"' run failed:", err)
 		}
-        os.Stderr.WriteString(fmt.Sprintln("[i] Cmd '"+command+"' executed"))
+		if stdout.Len() != 0 {
+			EPrint("[i] Out: " + stdout.String())
+		}
+		if stderr.Len() != 0 {
+			EPrint("[i] Err: " + stderr.String())
+		}
 	}
 }

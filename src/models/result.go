@@ -17,8 +17,21 @@ type HostResult struct {
 }
 
 func (result *HostResult) ReplaceVars(cmd string) string {
-	cmd = result.Details.ReplaceVars(cmd)
-	cmd = strings.ReplaceAll(cmd, "{host}", result.Addr.String())
+	if result.Details != nil {
+		cmd = result.Details.ReplaceVars(cmd)
+	}
+	host := result.Addr.String()
+	switch addr := result.Addr.(type) {
+	case *net.UDPAddr:
+		if addr.Port == 0 {
+			host = addr.IP.String()
+		}
+	case *net.TCPAddr:
+		if addr.Port == 0 {
+			host = addr.IP.String()
+		}
+	}
+	cmd = strings.ReplaceAll(cmd, "{host}", host)
 	cmd = strings.ReplaceAll(cmd, "{proto}", result.Addr.Network())
 	return cmd
 }

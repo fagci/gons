@@ -17,7 +17,12 @@ func (ds *DummyService) Check(ip net.IP) <-chan models.HostResult {
 	go func() {
         defer close(ch)
 		ch <- models.HostResult{
-			Addr: &net.TCPAddr{IP: ip},
+			Addr:    &net.TCPAddr{
+				IP:   ip,
+				Port: 0,
+				Zone: "",
+			},
+			Details: nil,
 		}
 	}()
 	return ch
