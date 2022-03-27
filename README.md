@@ -5,6 +5,8 @@
 ### Netrandom
 
 - RTSP fuzzer
+- random WAN IP generator
+- random WAN IP port (range) scanner
 
 ## Build
 
