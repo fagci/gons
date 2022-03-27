@@ -8,8 +8,10 @@ import (
 )
 
 type IPGenerator struct {
-	ch chan net.IP
-	r  *rand.Rand
+	ch  chan net.IP
+	r   *rand.Rand
+	max int64
+	i   int64
 }
 
 func (g *IPGenerator) GenerateWANIP() net.IP {
@@ -37,25 +39,31 @@ func (g *IPGenerator) GenerateWANIP() net.IP {
 
 func (g *IPGenerator) GenerateWAN() <-chan net.IP {
 	go func() {
+		defer close(g.ch)
 		for {
 			g.ch <- g.GenerateWANIP()
+            if g.max < 0 {
+                continue
+            }
+			g.i++
+			if g.i >= g.max {
+				return
+			}
 		}
 	}()
 
 	return g.ch
 }
-func (g *IPGenerator) Stop() {
-	close(g.ch)
-}
 
-func NewIPGenerator(capacity int) *IPGenerator {
+func NewIPGenerator(capacity int, max int64) *IPGenerator {
 	b := make([]byte, 8)
 	_, err := crypto_rand.Read(b)
 	if err != nil {
 		panic("Cryptorandom seed failed: " + err.Error())
 	}
 	return &IPGenerator{
-		ch: make(chan net.IP, capacity),
-		r:  rand.New(rand.NewSource(int64(binary.LittleEndian.Uint64(b)))),
+		ch:  make(chan net.IP, capacity),
+		r:   rand.New(rand.NewSource(int64(binary.LittleEndian.Uint64(b)))),
+		max: max,
 	}
 }

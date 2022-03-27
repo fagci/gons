@@ -1,29 +1,45 @@
 package models
 
 import (
-	"net/url"
-	"regexp"
+	"gons/src/utils"
+	"net"
 	"strings"
 )
 
-var regexpNonAuthorizedChars = regexp.MustCompile("[^a-zA-Z0-9-_]")
-var regexpMultipleDashes = regexp.MustCompile("-+")
-
-type Result struct {
-	Url url.URL
+type ResultDetails interface {
+	ReplaceVars(string) string
+	String() string
 }
 
-func (result *Result) ReplaceVars(cmd string) string {
-	cmd = strings.ReplaceAll(cmd, "{result}", result.Url.String())
-	cmd = strings.ReplaceAll(cmd, "{scheme}", result.Url.Scheme)
-	cmd = strings.ReplaceAll(cmd, "{host}", result.Url.Host)
-	cmd = strings.ReplaceAll(cmd, "{hostname}", result.Url.Hostname())
-	cmd = strings.ReplaceAll(cmd, "{port}", result.Url.Port())
-	cmd = strings.ReplaceAll(cmd, "{slug}", result.Slug())
+type HostResult struct {
+	Addr    net.Addr
+	Details ResultDetails
+}
+
+func (result *HostResult) ReplaceVars(cmd string) string {
+	cmd = result.Details.ReplaceVars(cmd)
+	cmd = strings.ReplaceAll(cmd, "{host}", result.Addr.String())
+	cmd = strings.ReplaceAll(cmd, "{proto}", result.Addr.Network())
 	return cmd
 }
 
-func (result *Result) Slug() string {
-	slug := regexpNonAuthorizedChars.ReplaceAllString(result.Url.String(), "-")
-	return regexpMultipleDashes.ReplaceAllString(slug, "-")
+func (result *HostResult) String() string {
+	if result.Details != nil {
+		return result.Details.String()
+	}
+	switch addr := result.Addr.(type) {
+	case *net.UDPAddr:
+		if addr.Port == 0 {
+			return addr.IP.String()
+		}
+	case *net.TCPAddr:
+		if addr.Port == 0 {
+			return addr.IP.String()
+		}
+	}
+	return result.Addr.String()
+}
+
+func (result *HostResult) Slug() string {
+	return utils.Slugify(result.Addr.String())
 }

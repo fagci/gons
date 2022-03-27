@@ -10,7 +10,7 @@ mkdir -p "${dir}"
 function capture() {
     local url="$1"
     local path="$2"
-    ffmpeg -rtsp_transport tcp -i "$url" -frames:v 1 -an -stimeout 30000 -y "$path" -loglevel warning 2>&1
+    ffmpeg -rtsp_transport tcp -i "$url" -frames:v 1 -an -y "$path" -loglevel warning 2>&1
 }
 
 function add_exif_comment() {
