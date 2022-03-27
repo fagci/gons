@@ -3,6 +3,7 @@ package services
 import (
 	"go-ns/src/models"
 	"go-ns/src/protocol"
+	"net"
 	"time"
 )
 
@@ -18,18 +19,7 @@ func NewRTSPService(port int, paths []string) *RTSPService {
 	}
 }
 
-func (rs *RTSPService) Check(host string) <-chan models.Result {
+func (rs *RTSPService) Check(host net.IP) <-chan models.HostResult {
 	r := protocol.NewRTSP(host, rs.Port, rs.paths, time.Second*2)
 	return r.Check()
 }
-
-/* func NewRTSPService2(port int, paths []string) func (string) <-chan models.Result {
-    rs := &RTSPService{
-		Port:  port,
-		paths: paths,
-	}
-	return func(host string) <-chan models.Result {
-		r := protocol.NewRTSP(host, rs.Port, rs.paths, time.Second*2)
-		return r.Check()
-	}
-} */

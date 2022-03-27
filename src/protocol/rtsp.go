@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-ns/src/generators"
 	"go-ns/src/models"
+	"go-ns/src/utils"
 	"net"
 	"net/url"
 	"strconv"
@@ -13,13 +14,35 @@ import (
 )
 
 type RTSP struct {
-	Host    string
+	Host    net.IP
 	Port    int
 	timeout time.Duration
 	conn    net.Conn
 	cseq    int
 	paths   []string
-	ch      chan models.Result
+	ch      chan models.HostResult
+}
+
+type RTSPResult struct {
+	Url url.URL
+}
+
+func (result *RTSPResult) ReplaceVars(cmd string) string {
+	cmd = strings.ReplaceAll(cmd, "{result}", result.Url.String())
+	cmd = strings.ReplaceAll(cmd, "{scheme}", result.Url.Scheme)
+	cmd = strings.ReplaceAll(cmd, "{host}", result.Url.Host)
+	cmd = strings.ReplaceAll(cmd, "{hostname}", result.Url.Hostname())
+	cmd = strings.ReplaceAll(cmd, "{port}", result.Url.Port())
+	cmd = strings.ReplaceAll(cmd, "{slug}", result.Slug())
+	return cmd
+}
+
+func (result *RTSPResult) Slug() string {
+	return utils.Slugify(result.Url.String())
+}
+
+func (result *RTSPResult) String() string {
+	return result.Url.String()
 }
 
 const RW_TIMEOUT = time.Second * 10
@@ -50,12 +73,6 @@ func (r *RTSP) Request(req string) (int, error) {
 	f := strings.Fields(response)
 	if len(f) > 2 && strings.HasPrefix(f[0], "RTSP") {
 		code, e := strconv.Atoi(f[1])
-		/* if e != nil || (code != 200 && code != 401 && code != 404) {
-			fmt.Println("Err:", e)
-			fmt.Println("Code:", code)
-			fmt.Println(req)
-			fmt.Println("----")
-		} */
 		return code, e
 	}
 
@@ -75,21 +92,27 @@ func (r *RTSP) Query(path string) string {
 	return fmt.Sprintf(_RTSP_TPL, method, path, r.cseq)
 }
 
-func (r *RTSP) Check() <-chan models.Result {
-	r.ch = make(chan models.Result)
+func (r *RTSP) Check() <-chan models.HostResult {
+	r.ch = make(chan models.HostResult)
 	r.cseq = 0
 	go r.check()
 	return r.ch
 }
 
 func (r *RTSP) result(path string) {
-	res := models.Result{}
+	res := &RTSPResult{}
 	res.Url = url.URL{
 		Scheme: "rtsp",
 		Host:   fmt.Sprintf("%s:%d", r.Host, r.Port),
 		Path:   path,
 	}
-	r.ch <- res
+	r.ch <- models.HostResult{
+		Addr: &net.TCPAddr{
+			IP:   r.Host,
+			Port: r.Port,
+		},
+		Details: res,
+	}
 }
 
 func (r *RTSP) check() {
@@ -135,7 +158,7 @@ func (r *RTSP) check() {
 	}
 }
 
-func NewRTSP(host string, port int, paths []string, timeout time.Duration) *RTSP {
+func NewRTSP(host net.IP, port int, paths []string, timeout time.Duration) *RTSP {
 	return &RTSP{
 		Host:    host,
 		Port:    port,
