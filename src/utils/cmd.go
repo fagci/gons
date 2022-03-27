@@ -30,7 +30,7 @@ func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration) {
 	select {
 	case <-t:
 		cmd.Process.Kill()
-		os.Stderr.WriteString(fmt.Sprintln("WW] Cmd '" + command + "' timeout"))
+		os.Stderr.WriteString(fmt.Sprintln("[W] Cmd '" + command + "' timeout"))
 	case err := <-done:
 		if err != nil {
 			os.Stderr.WriteString(fmt.Sprintln("[W] Cmd '"+command+"' run failed:", err))
