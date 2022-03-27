@@ -11,6 +11,7 @@ import (
 )
 
 func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration) {
+    defer wg.Done()
     shell := "sh"
     opt := "-c"
 
@@ -45,8 +46,8 @@ func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration) {
 			os.Stderr.WriteString(fmt.Sprintln("[W] Cmd '"+command+"' run failed:", err))
 			os.Stderr.WriteString(fmt.Sprintln("[W] Out: " + stdout.String()))
 			os.Stderr.WriteString(fmt.Sprintln("[W] Err: " + stderr.String()))
+            return
 		}
+        os.Stderr.WriteString(fmt.Sprintln("[i] Cmd '"+command+"' executed"))
 	}
-
-	wg.Done()
 }
