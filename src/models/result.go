@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"gons/src/utils"
 	"net"
 	"strings"
@@ -21,17 +22,22 @@ func (result *HostResult) ReplaceVars(cmd string) string {
 		cmd = result.Details.ReplaceVars(cmd)
 	}
 	host := result.Addr.String()
+	var hostname string
+	var port int
 	switch addr := result.Addr.(type) {
-	case *net.UDPAddr:
-		if addr.Port == 0 {
-			host = addr.IP.String()
-		}
 	case *net.TCPAddr:
-		if addr.Port == 0 {
-			host = addr.IP.String()
-		}
+		hostname = addr.IP.String()
+		port = addr.Port
+	case *net.UDPAddr:
+		hostname = addr.IP.String()
+		port = addr.Port
 	}
+	if port == 0 {
+		host = hostname
+	}
+	cmd = strings.ReplaceAll(cmd, "{hostname}", hostname)
 	cmd = strings.ReplaceAll(cmd, "{host}", host)
+	cmd = strings.ReplaceAll(cmd, "{port}", fmt.Sprintf("%d", port))
 	cmd = strings.ReplaceAll(cmd, "{proto}", result.Addr.Network())
 	return cmd
 }
