@@ -34,6 +34,12 @@ Take snapshots from RTSP stream and write source URL in metadata:
 ./gons -rtsp -w 4096 -callback 'bash ./callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
 ```
 
+Scan 1024 random WAN IPs for open VNC ports:
+
+```sh
+./gons -gw 1024 -ports 5900-5902
+```
+
 ## Testing
 
 ```sh
