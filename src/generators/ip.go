@@ -42,6 +42,9 @@ func (g *IPGenerator) GenerateWAN() <-chan net.IP {
 		defer close(g.ch)
 		for {
 			g.ch <- g.GenerateWANIP()
+            if g.max < 0 {
+                continue
+            }
 			g.i++
 			if g.i >= g.max {
 				return
