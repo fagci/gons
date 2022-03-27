@@ -29,7 +29,7 @@ Netrandom find possible RTSP sources:
 Take snapshots from RTSP stream and write source URL in metadata:
 
 ```sh
-./gons -rtsp -w 4096 -callback './callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
+./gons -rtsp -w 4096 -callback ' bash ./callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
 ```
 
 ## Testing
