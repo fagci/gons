@@ -1,7 +1,7 @@
 package services
 
 import (
-	"go-ns/src/models"
+	"gons/src/models"
 	"net"
 )
 

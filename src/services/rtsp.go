@@ -1,8 +1,8 @@
 package services
 
 import (
-	"go-ns/src/models"
-	"go-ns/src/protocol"
+	"gons/src/models"
+	"gons/src/protocol"
 	"net"
 	"time"
 )

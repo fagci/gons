@@ -3,9 +3,9 @@ package protocol
 import (
 	"errors"
 	"fmt"
-	"go-ns/src/generators"
-	"go-ns/src/models"
-	"go-ns/src/utils"
+	"gons/src/generators"
+	"gons/src/models"
+	"gons/src/utils"
 	"net"
 	"net/url"
 	"strconv"

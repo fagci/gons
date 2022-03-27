@@ -3,10 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"go-ns/src/generators"
-	"go-ns/src/loaders"
-	"go-ns/src/services"
-	"go-ns/src/utils"
+	"gons/src/generators"
+	"gons/src/loaders"
+	"gons/src/services"
+	"gons/src/utils"
 	"os"
 	"sync"
 )

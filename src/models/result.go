@@ -1,7 +1,7 @@
 package models
 
 import (
-	"go-ns/src/utils"
+	"gons/src/utils"
 	"net"
 	"strings"
 )
