@@ -5,12 +5,21 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"sync"
 	"time"
 )
 
 func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration) {
-	cmd := exec.Command("sh", "-c", command)
+    shell := "sh"
+    opt := "-c"
+
+    if runtime.GOOS == "windows" {
+        shell = "cmd.exe"
+        opt = "/C"
+    }
+
+	cmd := exec.Command(shell, opt, command)
 
 	var stderr bytes.Buffer
 	var stdout bytes.Buffer
