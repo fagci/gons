@@ -13,24 +13,23 @@ import (
 	"time"
 )
 
-var generateIps = flag.Int64("gw", -1, "generate N random WAN IPs")
+var generateIps = flag.Int64("n", -1, "generate N random WAN IPs")
 var scanWorkers = flag.Int("w", 1024, "workers count")
+var connTimeout = flag.Int("t", 700, "scan connect timeout in milliseconds")
+var scanPorts = flag.String("p", "", "scan ports on every rarget")
 
-var resultCallback = flag.String("callback", "", "callback to run as shell command. Use {result} as template")
-var resultCallbackConcurrency = flag.Int("cc", 30, "callback max concurrency")
-var resultCallbackTimeout = flag.Int("ct", 30, "callback timeout in seconds")
-var resultCallbackE = flag.Bool("dce", false, "disable callback errors")
-var resultCallbackW = flag.Bool("dcw", false, "disable callback warnings")
-var resultCallbackI = flag.Bool("dci", false, "disable callback info")
+var resultCallback = flag.String("cb", "", "callback to run as shell command. Use {result} as template")
+var resultCallbackTimeout = flag.Int("cbt", 30, "callback timeout in seconds")
+var resultCallbackConcurrency = flag.Int("cbmc", 30, "callback max concurrency")
+var resultCallbackE = flag.Bool("cbde", false, "disable callback errors")
+var resultCallbackW = flag.Bool("cbdw", false, "disable callback warnings")
+var resultCallbackI = flag.Bool("cbdi", false, "disable callback info")
 
 var scanRtsp = flag.Bool("rtsp", false, "check rtsp")
 var rtspFuzzDict = flag.String("rtspd", "./data/rtsp-paths.txt", "RTSP dictionary to fuzz")
 
-var scanPorts = flag.String("ports", "", "scan ports on every rarget")
-var portScanTimeout = flag.Int("pst", 700, "portscan timeout in milliseconds")
-
-var cpuprofile = flag.String("cpu", "", "profile cpu")
-var memprofile = flag.String("mem", "", "profile mem")
+var cpuprofile = flag.String("profcpu", "", "profile cpu")
+var memprofile = flag.String("profmem", "", "profile mem")
 
 func main() {
 	flag.Parse()
@@ -77,13 +76,13 @@ func main() {
 			utils.EPrintln("[E]", err)
 			os.Exit(1)
 		}
-		rtspService := services.NewRTSPService(554, paths)
+		rtspService := services.NewRTSPService(554, paths, time.Millisecond*time.Duration(*connTimeout))
 		processor.AddService(rtspService)
 	}
 
 	if *scanPorts != "" {
 		ports := utils.ParseRange(*scanPorts)
-		processor.AddService(services.NewPortscanService(ports, time.Millisecond*time.Duration(*portScanTimeout)))
+		processor.AddService(services.NewPortscanService(ports, time.Millisecond*time.Duration(*connTimeout)))
 	}
 
 	if len(processor.Services()) == 0 {

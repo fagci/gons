@@ -19,7 +19,7 @@ go build
 Generate 5 random wan IPs:
 
 ```sh
-./gons -gw 5
+./gons -n 5
 ```
 
 Netrandom find possible RTSP sources:
@@ -31,13 +31,13 @@ Netrandom find possible RTSP sources:
 Take snapshots from RTSP stream and write source URL in metadata:
 
 ```sh
-./gons -rtsp -w 4096 -callback 'bash ./callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
+./gons -rtsp -w 4096 -cb 'bash ./callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
 ```
 
 Scan 1024 random WAN IPs for open VNC ports:
 
 ```sh
-./gons -gw 1024 -ports 5900-5902
+./gons -n 1024 -ports 5900-5902
 ```
 
 ## Testing

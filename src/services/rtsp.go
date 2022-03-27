@@ -8,18 +8,20 @@ import (
 )
 
 type RTSPService struct {
-	Port  int
-	paths []string
+	Port        int
+	paths       []string
+	connTimeout time.Duration
 }
 
-func NewRTSPService(port int, paths []string) *RTSPService {
+func NewRTSPService(port int, paths []string, connTimeout time.Duration) *RTSPService {
 	return &RTSPService{
-		Port:  port,
-		paths: paths,
+		Port:        port,
+		paths:       paths,
+		connTimeout: connTimeout,
 	}
 }
 
 func (rs *RTSPService) Check(host net.IP) <-chan models.HostResult {
-	r := protocol.NewRTSP(host, rs.Port, rs.paths, time.Second*2)
+	r := protocol.NewRTSP(host, rs.Port, rs.paths, rs.connTimeout)
 	return r.Check()
 }
