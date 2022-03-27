@@ -1,20 +1,27 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 url="$1"
 dir="$2"
 slug="$3"
-path="${dir}/${slug}.jpg"
+file_path="${dir}/${slug}.jpg"
 
 mkdir -p "${dir}"
 
-timeout 30 \
-    ffmpeg -rtsp_transport tcp \
-    -i "$url" \
-    -frames:v 1 -an \
-    -y "$path" \
-    -loglevel warning 2>&1 \
-    && ( \
-      (hash exiftool && exiftool -Comment="$url" "$path" && rm "${path}_original") \
-      || \
-      (hash jhead && jhead -cl "$url" "$path") \
-    )
+function capture() {
+    local url="$1"
+    local path="$2"
+    ffmpeg -rtsp_transport tcp -i "$url" -frames:v 1 -an -stimeout 30000 -y "$path" -loglevel warning 2>&1
+}
+
+function add_exif_comment() {
+    local file="$1"
+    local comment="$2"
+    if hash exiftool; then
+        exiftool -Comment="$url" "$file_path" && rm "${file_path}_original"
+    elif hash jhead; then
+        jhead -cl "$url" "$file_path"
+    fi
+}
+
+capture "$url" "$file_path" && add_exif_comment "$file_path" "$url"
+
