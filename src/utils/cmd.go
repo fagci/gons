@@ -2,13 +2,27 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
 	"os/exec"
 	"runtime"
 	"sync"
 	"time"
 )
 
-func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration) {
+type Flags uint8
+
+const (
+	ERR Flags = 1 << iota
+	WARN
+	INFO
+)
+
+func (b Flags) Set(flag Flags) Flags    { return b | flag }
+func (b Flags) Clear(flag Flags) Flags  { return b &^ flag }
+func (b Flags) Toggle(flag Flags) Flags { return b ^ flag }
+func (b Flags) Has(flag Flags) bool     { return b&flag != 0 }
+
+func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration, flags Flags) {
 	defer wg.Done()
 	shell := "sh"
 	opt := "-c"
@@ -38,16 +52,18 @@ func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration) {
 	select {
 	case <-t:
 		cmd.Process.Kill()
-		EPrintln("[W] Cmd '" + command + "' timeout")
+		if flags.Has(WARN) {
+			EPrintln("[W:CB:timeout]", "'"+command+"'")
+		}
 	case err := <-done:
-		if err != nil {
-			EPrintln("[W] Cmd '"+command+"' run failed:", err)
+		if err != nil && flags.Has(ERR) {
+			EPrintln("[W:CB:E]", "'"+command+"'", err)
 		}
-		if stdout.Len() != 0 {
-			EPrint("[i] Out: " + stdout.String())
+		if flags.Has(INFO) && stdout.Len() != 0 {
+			fmt.Print(stdout.String())
 		}
-		if stderr.Len() != 0 {
-			EPrint("[i] Err: " + stderr.String())
+		if flags.Has(ERR) && stderr.Len() != 0 {
+			EPrintf("[i:CB:err] %s", stderr.String())
 		}
 	}
 }
