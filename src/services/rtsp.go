@@ -22,6 +22,7 @@ func NewRTSPService(port int, paths []string, connTimeout time.Duration) *RTSPSe
 }
 
 func (rs *RTSPService) Check(host net.IP) <-chan models.HostResult {
-	r := protocol.NewRTSP(host, rs.Port, rs.paths, rs.connTimeout)
+	addr := net.TCPAddr{IP: host, Port: rs.Port}
+	r := protocol.NewRTSP(&addr, rs.paths, rs.connTimeout)
 	return r.Check()
 }

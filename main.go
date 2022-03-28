@@ -109,17 +109,24 @@ func main() {
 	wg := new(sync.WaitGroup)
 	guard := make(chan struct{}, callbackConcurrency)
 
+	sp := utils.Spinner{}
+    sp.Start()
+
 	for result := range processor.Process() {
 		if callback != "" {
 			wg.Add(1)
 			guard <- struct{}{}
 			cmd := result.ReplaceVars(callback)
 			go func() {
+                sp.Stop()
 				utils.RunCommand(cmd, wg, callbackTimeout, cbFlags)
 				<-guard
+                if len(guard) == 0 {sp.Start()}
 			}()
 		} else {
+            sp.Stop()
 			fmt.Println(&result)
+            sp.Start()
 		}
 	}
 

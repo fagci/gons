@@ -14,8 +14,7 @@ import (
 )
 
 type RTSP struct {
-	Host    net.IP
-	Port    int
+	Addr    net.Addr
 	timeout time.Duration
 	conn    net.Conn
 	cseq    int
@@ -85,7 +84,7 @@ func (r *RTSP) Query(path string) string {
 	if path == "*" {
 		method = "OPTIONS"
 	} else {
-		path = fmt.Sprintf("rtsp://%s:%d%s", r.Host, r.Port, path)
+		path = fmt.Sprintf("rtsp://%s%s", r.Addr.String(), path)
 	}
 
 	r.cseq++
@@ -103,14 +102,11 @@ func (r *RTSP) result(path string) {
 	res := &RTSPResult{}
 	res.Url = url.URL{
 		Scheme: "rtsp",
-		Host:   fmt.Sprintf("%s:%d", r.Host, r.Port),
+		Host:   r.Addr.String(),
 		Path:   path,
 	}
 	r.ch <- models.HostResult{
-		Addr: &net.TCPAddr{
-			IP:   r.Host,
-			Port: r.Port,
-		},
+		Addr:    r.Addr,
 		Details: res,
 	}
 }
@@ -120,9 +116,7 @@ func (r *RTSP) check() {
 
 	defer close(r.ch)
 
-	address := fmt.Sprintf("%s:%d", r.Host, r.Port)
-
-	if r.conn, err = net.DialTimeout("tcp", address, r.timeout); err != nil {
+	if r.conn, err = net.DialTimeout("tcp", r.Addr.String(), r.timeout); err != nil {
 		return
 	}
 
@@ -158,10 +152,9 @@ func (r *RTSP) check() {
 	}
 }
 
-func NewRTSP(host net.IP, port int, paths []string, timeout time.Duration) *RTSP {
+func NewRTSP(addr net.Addr, paths []string, timeout time.Duration) *RTSP {
 	return &RTSP{
-		Host:    host,
-		Port:    port,
+		Addr:    addr,
 		timeout: timeout,
 		paths:   paths,
 	}
