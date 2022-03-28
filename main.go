@@ -13,19 +13,17 @@ import (
 	"time"
 )
 
-var randomIPsCount int64
-var scanWorkers, resultCallbackConcurrency int
-var connTimeout, resultCallbackTimeout time.Duration
-
-var resultCallback string
-var resultCallbackI, resultCallbackE, resultCallbackW bool
-
-var scanPorts string
-
-var scanRtsp bool
-var rtspFuzzDict string
-
-var cpuprofile, memprofile string
+var (
+	randomIPsCount                   int64
+	scanWorkers, callbackConcurrency int
+	connTimeout, callbackTimeout     time.Duration
+	callback                         string
+	callbackI, callbackE, callbackW  bool
+	scanPorts                        string
+	scanRtsp                         bool
+	rtspFuzzDict                     string
+	cpuprofile, memprofile           string
+)
 
 func init() {
 	flag.Int64Var(&randomIPsCount, "n", -1, "generate N random WAN IPs")
@@ -34,12 +32,12 @@ func init() {
 	flag.DurationVar(&connTimeout, "t", 700*time.Millisecond, "scan connect timeout")
 	flag.DurationVar(&connTimeout, "timeout", 700*time.Millisecond, "scan connect timeout")
 
-	flag.StringVar(&resultCallback, "cb", "", "callback to run as shell command. Use {result} as template")
-	flag.DurationVar(&resultCallbackTimeout, "cbt", 30*time.Second, "callback timeout")
-	flag.IntVar(&resultCallbackConcurrency, "cbmc", 30, "callback max concurrency")
-	flag.BoolVar(&resultCallbackI, "cbdi", false, "disable callback infos")
-	flag.BoolVar(&resultCallbackW, "cbdw", false, "disable callback warnings")
-	flag.BoolVar(&resultCallbackE, "cbde", false, "disable callback errors")
+	flag.StringVar(&callback, "cb", "", "callback to run as shell command. Use {result} as template")
+	flag.DurationVar(&callbackTimeout, "cbt", 30*time.Second, "callback timeout")
+	flag.IntVar(&callbackConcurrency, "cbmc", 30, "callback max concurrency")
+	flag.BoolVar(&callbackI, "cbdi", false, "disable callback infos")
+	flag.BoolVar(&callbackW, "cbdw", false, "disable callback warnings")
+	flag.BoolVar(&callbackE, "cbde", false, "disable callback errors")
 
 	flag.StringVar(&scanPorts, "p", "", "scan ports on every rarget")
 	flag.StringVar(&scanPorts, "ports", "", "scan ports on every rarget")
@@ -78,13 +76,13 @@ func main() {
 	processor := services.NewProcessor(ipGenerator, scanWorkers)
 
 	var cbFlags utils.Flags
-	if !resultCallbackE {
+	if !callbackE {
 		cbFlags = cbFlags.Set(utils.ERR)
 	}
-	if !resultCallbackW {
+	if !callbackW {
 		cbFlags = cbFlags.Set(utils.WARN)
 	}
-	if !resultCallbackI {
+	if !callbackI {
 		cbFlags = cbFlags.Set(utils.INFO)
 	}
 
@@ -109,15 +107,15 @@ func main() {
 	}
 
 	wg := new(sync.WaitGroup)
-	guard := make(chan struct{}, resultCallbackConcurrency)
+	guard := make(chan struct{}, callbackConcurrency)
 
 	for result := range processor.Process() {
-		if resultCallback != "" {
+		if callback != "" {
 			wg.Add(1)
 			guard <- struct{}{}
-			cmd := result.ReplaceVars(resultCallback)
+			cmd := result.ReplaceVars(callback)
 			go func() {
-				utils.RunCommand(cmd, wg, resultCallbackTimeout, cbFlags)
+				utils.RunCommand(cmd, wg, callbackTimeout, cbFlags)
 				<-guard
 			}()
 		} else {
