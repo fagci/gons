@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"gons/src/generators"
-	"gons/src/models"
-	"gons/src/utils"
 	"net"
 	"net/url"
 	"strconv"
@@ -19,29 +17,6 @@ type RTSP struct {
 	conn    net.Conn
 	cseq    int
 	paths   []string
-	ch      chan models.HostResult
-}
-
-type RTSPResult struct {
-	Url url.URL
-}
-
-func (result *RTSPResult) ReplaceVars(cmd string) string {
-	cmd = strings.ReplaceAll(cmd, "{result}", result.Url.String())
-	cmd = strings.ReplaceAll(cmd, "{scheme}", result.Url.Scheme)
-	cmd = strings.ReplaceAll(cmd, "{host}", result.Url.Host)
-	cmd = strings.ReplaceAll(cmd, "{hostname}", result.Url.Hostname())
-	cmd = strings.ReplaceAll(cmd, "{port}", result.Url.Port())
-	cmd = strings.ReplaceAll(cmd, "{slug}", result.Slug())
-	return cmd
-}
-
-func (result *RTSPResult) Slug() string {
-	return utils.Slugify(result.Url.String())
-}
-
-func (result *RTSPResult) String() string {
-	return result.Url.String()
 }
 
 const RW_TIMEOUT = time.Second * 10
@@ -91,64 +66,55 @@ func (r *RTSP) Query(path string) string {
 	return fmt.Sprintf(_RTSP_TPL, method, path, r.cseq)
 }
 
-func (r *RTSP) Check() <-chan models.HostResult {
-	r.ch = make(chan models.HostResult)
-	r.cseq = 0
-	go r.check()
-	return r.ch
-}
-
-func (r *RTSP) result(path string) {
-	res := &RTSPResult{}
-	res.Url = url.URL{
-		Scheme: "rtsp",
-		Host:   r.Addr.String(),
-		Path:   path,
-	}
-	r.ch <- models.HostResult{
-		Addr:    r.Addr,
-		Details: res,
-	}
-}
-
-func (r *RTSP) check() {
+func (r *RTSP) Check() (url.URL, error) {
 	var err error
-
-	defer close(r.ch)
+    var url url.URL
 
 	if r.conn, err = net.DialTimeout("tcp", r.Addr.String(), r.timeout); err != nil {
-		return
+		return url, err
 	}
 
 	defer r.conn.Close()
 
 	if _, err = r.Request(r.Query("*")); err != nil {
-		return
+		return url, err
 	}
 
 	var code int
 	code, err = r.Request(r.Query(generators.RandomPath(6, 12)))
 	if err != nil {
-		return
+		return url, err
 	}
 
 	if code == 200 {
 		code, err = r.Request("/")
 		if err == nil && code == 200 {
-			r.result("/")
+			return r.result("/"), nil
 		}
-		return
+		return url, errors.New("RTSP: fake")
 	}
 
 	for _, path := range r.paths {
 		code, err = r.Request(r.Query(path))
-		if err != nil || code == 401 {
-			return
+		if err != nil {
+			return url, err
 		}
+        if code == 401 {
+            return url, errors.New("RTSP: unauthorized")
+        }
 		if code == 200 {
-			r.result(path)
-			return
+			return r.result(path), nil
 		}
+	}
+
+	return url, errors.New("RTSP: bad response")
+}
+
+func (r *RTSP) result(path string) url.URL {
+	return url.URL{
+		Scheme: "rtsp",
+		Host:   r.Addr.String(),
+		Path:   path,
 	}
 }
 

@@ -2,7 +2,6 @@ package services
 
 import (
 	"gons/src/generators"
-	"gons/src/models"
 	"net"
 	"sync"
 )
@@ -11,7 +10,7 @@ type Processor struct {
 	WorkersCount int
 	generator    *generators.IPGenerator
 	services     []Service
-	ch           chan models.HostResult
+	ch           chan HostResult
 }
 
 func NewProcessor(generator *generators.IPGenerator, workersCount int) *Processor {
@@ -29,11 +28,11 @@ func (p *Processor) Services() []Service {
 	return p.services
 }
 
-func (p *Processor) Process() <-chan models.HostResult {
+func (p *Processor) Process() <-chan HostResult {
 	var wg sync.WaitGroup
-	p.ch = make(chan models.HostResult)
+	p.ch = make(chan HostResult)
 
-	ipGeneratorChannel := p.generator.GenerateWAN()
+	ipGeneratorChannel := p.generator.Generate()
 	for i := 0; i < p.WorkersCount; i++ {
 		wg.Add(1)
 		go p.work(ipGeneratorChannel, &wg)
@@ -49,11 +48,12 @@ func (p *Processor) Process() <-chan models.HostResult {
 
 func (p *Processor) work(ipGeneratorChannel <-chan net.IP, wg *sync.WaitGroup) {
 	defer wg.Done()
+	var swg sync.WaitGroup
 	for ip := range ipGeneratorChannel {
 		for _, svc := range p.services {
-			for result := range svc.Check(ip) {
-				p.ch <- result
-			}
+            swg.Add(1)
+			go svc.Check(ip, p.ch, &swg)
 		}
 	}
+    swg.Wait()
 }

@@ -1,10 +1,10 @@
 package services
 
 import (
-	"gons/src/models"
 	"net"
+	"sync"
 )
 
 type Service interface {
-    Check(net.IP) <-chan models.HostResult
+	Check(net.IP, chan<- HostResult, *sync.WaitGroup)
 }

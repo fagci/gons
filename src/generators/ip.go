@@ -14,7 +14,7 @@ type IPGenerator struct {
 	i   int64
 }
 
-func (g *IPGenerator) GenerateWANIP() net.IP {
+func (g *IPGenerator) GenerateIP() net.IP {
 	var intip uint32
 	for {
 		intip = g.r.Uint32()%0xD0000000 + 0xFFFFFF
@@ -37,11 +37,11 @@ func (g *IPGenerator) GenerateWANIP() net.IP {
 	return net.IPv4(byte(intip>>24), byte(intip>>16), byte(intip>>8), byte(intip))
 }
 
-func (g *IPGenerator) GenerateWAN() <-chan net.IP {
+func (g *IPGenerator) Generate() <-chan net.IP {
 	go func() {
 		defer close(g.ch)
 		for {
-			g.ch <- g.GenerateWANIP()
+			g.ch <- g.GenerateIP()
             if g.max < 0 {
                 continue
             }
