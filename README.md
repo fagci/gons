@@ -31,19 +31,19 @@ Generate 5 random wan IPs:
 Netrandom find possible RTSP sources:
 
 ```sh
-./gons -rtsp
+./gons -s rtsp
 ```
 
 Take snapshots from RTSP stream and write source URL in metadata:
 
 ```sh
-./gons -rtsp -w 4096 -cb 'bash ./callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
+./gons -s rtsp -w 4096 -cb 'bash ./callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
 ```
 
 Scan 1024 random WAN IPs for open VNC ports:
 
 ```sh
-./gons -n 1024 -ports 5900-5902
+./gons -n 1024 -s portscan -ports 5900-5902
 ```
 
 ## Testing

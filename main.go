@@ -9,6 +9,7 @@ import (
 	"gons/src/utils"
 	"os"
 	"runtime/pprof"
+	"strings"
 	"sync"
 	"time"
 )
@@ -20,9 +21,9 @@ var (
 	callback                         string
 	callbackI, callbackE, callbackW  bool
 	scanPorts                        string
-	scanRtsp                         bool
+	service                          string
 	rtspPort                         int
-	rtspFuzzDict                     string
+	fuzzDict                         string
 	cpuprofile, memprofile           string
 )
 
@@ -44,9 +45,8 @@ func init() {
 	flag.StringVar(&scanPorts, "p", "", "scan ports on every rarget")
 	flag.StringVar(&scanPorts, "ports", "", "scan ports on every rarget")
 
-	flag.BoolVar(&scanRtsp, "rtsp", false, "check rtsp")
-	flag.StringVar(&rtspFuzzDict, "rtspd", "./data/rtsp-paths.txt", "RTSP dictionary to fuzz")
-	flag.IntVar(&rtspPort, "rtspp", 554, "rtsp port")
+	flag.StringVar(&service, "s", "", "check service (rtsp, ...)")
+	flag.StringVar(&fuzzDict, "d", "./data/rtsp-paths.txt", "dictionary to fuzz")
 
 	flag.StringVar(&cpuprofile, "profcpu", "", "profile cpu")
 	flag.StringVar(&memprofile, "profmem", "", "profile mem")
@@ -89,20 +89,28 @@ func main() {
 		cbFlags = cbFlags.Set(utils.INFO)
 	}
 
-	if scanRtsp {
-		os.Stderr.WriteString(fmt.Sprintln("[i] Using rtsp"))
-		paths, err := loaders.FileToArray(rtspFuzzDict)
-		if err != nil {
-			utils.EPrintln("[E]", err)
-			os.Exit(1)
+	if service != "" {
+		var paths []string
+		var err error
+		if fuzzDict != "" {
+			paths, err = loaders.FileToArray(fuzzDict)
+			if err != nil {
+				utils.EPrintln("[E]", err)
+				os.Exit(1)
+			}
 		}
-		rtspService := services.NewRTSPService(rtspPort, paths, connTimeout)
-		processor.AddService(rtspService)
-	}
 
-	if scanPorts != "" {
 		ports := utils.ParseRange(scanPorts)
-		processor.AddService(services.NewPortscanService(ports, connTimeout))
+
+		utils.EPrintln("[i] Using", service)
+		var svc services.Service
+		switch strings.ToLower(service) {
+		case "rtsp":
+			svc = services.NewRTSPService(ports, connTimeout, paths)
+        case "portscan":
+            svc = services.NewPortscanService(ports, connTimeout)
+		}
+		processor.AddService(svc)
 	}
 
 	if len(processor.Services()) == 0 {
