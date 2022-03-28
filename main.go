@@ -15,11 +15,11 @@ import (
 
 var generateIps = flag.Int64("n", -1, "generate N random WAN IPs")
 var scanWorkers = flag.Int("w", 1024, "workers count")
-var connTimeout = flag.Int("t", 700, "scan connect timeout in milliseconds")
+var connTimeout = flag.Duration("t", 700*time.Millisecond, "scan connect timeout")
 var scanPorts = flag.String("p", "", "scan ports on every rarget")
 
 var resultCallback = flag.String("cb", "", "callback to run as shell command. Use {result} as template")
-var resultCallbackTimeout = flag.Int("cbt", 30, "callback timeout in seconds")
+var resultCallbackTimeout = flag.Duration("cbt", 30*time.Second, "callback timeout")
 var resultCallbackConcurrency = flag.Int("cbmc", 30, "callback max concurrency")
 var resultCallbackE = flag.Bool("cbde", false, "disable callback errors")
 var resultCallbackW = flag.Bool("cbdw", false, "disable callback warnings")
@@ -57,7 +57,6 @@ func main() {
 	ipGenerator := generators.NewIPGenerator(128, *generateIps)
 	processor := services.NewProcessor(ipGenerator, *scanWorkers)
 
-	callbackTimeout := time.Second * time.Duration(*resultCallbackTimeout)
 	var cbFlags utils.Flags
 	if !*resultCallbackE {
 		cbFlags = cbFlags.Set(utils.ERR)
@@ -76,13 +75,13 @@ func main() {
 			utils.EPrintln("[E]", err)
 			os.Exit(1)
 		}
-		rtspService := services.NewRTSPService(554, paths, time.Millisecond*time.Duration(*connTimeout))
+		rtspService := services.NewRTSPService(554, paths, *connTimeout)
 		processor.AddService(rtspService)
 	}
 
 	if *scanPorts != "" {
 		ports := utils.ParseRange(*scanPorts)
-		processor.AddService(services.NewPortscanService(ports, time.Millisecond*time.Duration(*connTimeout)))
+		processor.AddService(services.NewPortscanService(ports, *connTimeout))
 	}
 
 	if len(processor.Services()) == 0 {
@@ -98,7 +97,7 @@ func main() {
 			guard <- struct{}{}
 			cmd := result.ReplaceVars(*resultCallback)
 			go func() {
-				utils.RunCommand(cmd, wg, callbackTimeout, cbFlags)
+				utils.RunCommand(cmd, wg, *resultCallbackTimeout, cbFlags)
 				<-guard
 			}()
 		} else {
