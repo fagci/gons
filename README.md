@@ -14,6 +14,12 @@
 go build
 ```
 
+To get smaller binsry:
+
+```sh
+go build -ldflags="-s -w"
+```
+
 ## Usage
 
 Generate 5 random wan IPs:

@@ -48,9 +48,8 @@ func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration, flags
 		done <- cmd.Wait()
 	}()
 
-	t := time.After(timeout)
 	select {
-	case <-t:
+	case <-time.After(timeout):
 		cmd.Process.Kill()
 		if flags.Has(WARN) {
 			EPrintln("[W:CB:timeout]", "'"+command+"'")
