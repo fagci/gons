@@ -21,6 +21,7 @@ var (
 	callbackI, callbackE, callbackW  bool
 	scanPorts                        string
 	scanRtsp                         bool
+	rtspPort                         int
 	rtspFuzzDict                     string
 	cpuprofile, memprofile           string
 )
@@ -33,6 +34,7 @@ func init() {
 	flag.DurationVar(&connTimeout, "timeout", 700*time.Millisecond, "scan connect timeout")
 
 	flag.StringVar(&callback, "cb", "", "callback to run as shell command. Use {result} as template")
+	flag.StringVar(&callback, "callback", "", "callback to run as shell command. Use {result} as template")
 	flag.DurationVar(&callbackTimeout, "cbt", 30*time.Second, "callback timeout")
 	flag.IntVar(&callbackConcurrency, "cbmc", 30, "callback max concurrency")
 	flag.BoolVar(&callbackI, "cbdi", false, "disable callback infos")
@@ -44,6 +46,7 @@ func init() {
 
 	flag.BoolVar(&scanRtsp, "rtsp", false, "check rtsp")
 	flag.StringVar(&rtspFuzzDict, "rtspd", "./data/rtsp-paths.txt", "RTSP dictionary to fuzz")
+	flag.IntVar(&rtspPort, "rtspp", 554, "rtsp port")
 
 	flag.StringVar(&cpuprofile, "profcpu", "", "profile cpu")
 	flag.StringVar(&memprofile, "profmem", "", "profile mem")
@@ -93,7 +96,7 @@ func main() {
 			utils.EPrintln("[E]", err)
 			os.Exit(1)
 		}
-		rtspService := services.NewRTSPService(554, paths, connTimeout)
+		rtspService := services.NewRTSPService(rtspPort, paths, connTimeout)
 		processor.AddService(rtspService)
 	}
 
@@ -106,29 +109,34 @@ func main() {
 		processor.AddService(services.NewDummyService())
 	}
 
-	wg := new(sync.WaitGroup)
-	guard := make(chan struct{}, callbackConcurrency)
-
 	sp := utils.Spinner{}
-    sp.Start()
+	sp.Start()
+	defer sp.Stop()
 
-	for result := range processor.Process() {
-		if callback != "" {
+	results := processor.Process()
+
+	if callback != "" {
+		wg := new(sync.WaitGroup)
+		guard := make(chan struct{}, callbackConcurrency)
+		for result := range results {
 			wg.Add(1)
 			guard <- struct{}{}
 			cmd := result.ReplaceVars(callback)
 			go func() {
-                sp.Stop()
+				sp.Stop()
 				utils.RunCommand(cmd, wg, callbackTimeout, cbFlags)
 				<-guard
-                if len(guard) == 0 {sp.Start()}
+				if len(guard) == 0 {
+					sp.Start()
+				}
 			}()
-		} else {
-            sp.Stop()
+		}
+		wg.Wait()
+	} else {
+		for result := range results {
+			sp.Stop()
 			fmt.Println(&result)
-            sp.Start()
+			sp.Start()
 		}
 	}
-
-	wg.Wait()
 }
