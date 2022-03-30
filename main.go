@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"gons/src/generators"
 	"gons/src/loaders"
+	"gons/src/network"
 	"gons/src/services"
 	"gons/src/utils"
 	"os"
@@ -14,6 +15,7 @@ import (
 )
 
 var (
+	iface          string
 	randomIPsCount int64
 	scanWorkers    int
 	connTimeout    time.Duration
@@ -30,11 +32,18 @@ var (
 )
 
 func init() {
+	flag.StringVar(&iface, "i", "", "use specific network interface")
 	flag.Int64Var(&randomIPsCount, "n", -1, "generate N random WAN IPs")
 	flag.IntVar(&scanWorkers, "w", 1024, "workers count")
 	flag.IntVar(&scanWorkers, "workers", 1024, "workers count")
 	flag.DurationVar(&connTimeout, "t", 700*time.Millisecond, "scan connect timeout")
 	flag.DurationVar(&connTimeout, "timeout", 700*time.Millisecond, "scan connect timeout")
+
+	flag.StringVar(&scanPorts, "p", "", "scan ports on every rarget")
+	flag.StringVar(&scanPorts, "ports", "", "scan ports on every rarget")
+
+	flag.StringVar(&service, "s", "", "check service (rtsp, ...)")
+	flag.StringVar(&fuzzDict, "d", "./data/rtsp-paths.txt", "dictionary to fuzz")
 
 	flag.StringVar(&callback, "cb", "", "callback to run as shell command. Use {result} as template")
 	flag.StringVar(&callback, "callback", "", "callback to run as shell command. Use {result} as template")
@@ -43,16 +52,18 @@ func init() {
 	flag.BoolVar(&callbackI, "cbdi", false, "disable callback infos")
 	flag.BoolVar(&callbackW, "cbdw", false, "disable callback warnings")
 	flag.BoolVar(&callbackE, "cbde", false, "disable callback errors")
-
-	flag.StringVar(&scanPorts, "p", "", "scan ports on every rarget")
-	flag.StringVar(&scanPorts, "ports", "", "scan ports on every rarget")
-
-	flag.StringVar(&service, "s", "", "check service (rtsp, ...)")
-	flag.StringVar(&fuzzDict, "d", "./data/rtsp-paths.txt", "dictionary to fuzz")
 }
 
 func main() {
 	flag.Parse()
+
+	if iface != "" {
+		if err := network.SetInterface(iface); err != nil {
+			utils.EPrintln("[E] iface", err)
+			return
+		}
+		utils.EPrintln("[i] Using iface", iface)
+	}
 
 	ipGenerator := generators.NewIPGenerator(128, randomIPsCount)
 	processor := services.NewProcessor(ipGenerator, scanWorkers)
@@ -83,15 +94,19 @@ func main() {
 
 		ports := utils.ParseRange(scanPorts)
 
-		utils.EPrintln("[i] Using", service)
 		var svc services.Service
+
 		switch strings.ToLower(service) {
 		case "rtsp":
 			svc = services.NewRTSPService(ports, connTimeout, paths)
 		case "portscan":
 			svc = services.NewPortscanService(ports, connTimeout)
 		}
-		processor.AddService(svc)
+
+		if svc != nil {
+			utils.EPrintln("[i] Using", service)
+			processor.AddService(svc)
+		}
 	}
 
 	sp := utils.Spinner{}

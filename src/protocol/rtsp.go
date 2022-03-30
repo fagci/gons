@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gons/src/generators"
+	"gons/src/network"
 	"net"
 	"net/url"
 	"strconv"
@@ -70,7 +71,7 @@ func (r *RTSP) Check() (url.URL, error) {
 	var err error
     var url url.URL
 
-	if r.conn, err = net.DialTimeout("tcp", r.Addr.String(), r.timeout); err != nil {
+	if r.conn, err = network.DialTimeout("tcp", r.Addr.String(), r.timeout); err != nil {
 		return url, err
 	}
 

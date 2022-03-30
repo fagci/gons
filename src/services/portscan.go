@@ -1,6 +1,7 @@
 package services
 
 import (
+	"gons/src/network"
 	"net"
 	"sync"
 	"time"
@@ -17,7 +18,7 @@ func NewPortscanService(ports []int, timeout time.Duration) *PortscanService {
 
 func (s *PortscanService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.WaitGroup) {
 	defer wg.Done()
-	if conn, err := net.DialTimeout("tcp", addr.String(), s.timeout); err == nil {
+	if conn, err := network.DialTimeout("tcp", addr.String(), s.timeout); err == nil {
 		conn.Close()
 		ch <- HostResult{Addr: &addr}
 	}
