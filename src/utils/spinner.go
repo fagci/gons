@@ -34,14 +34,14 @@ func (s *Spinner) Stop() {
 }
 
 func (s *Spinner) next() {
-	EPrintf("\r%s", s.chars[s.i])
+	EPrintf("\r%s\u001b[0J", s.chars[s.i])
 	s.i++
 	if s.i >= len(s.chars) {
 		s.i = 0
 	}
 }
 func (s *Spinner) clear() {
-	EPrintf("\r")
+	EPrintf("\r\u001b[0J")
 }
 
 func (s *Spinner) spin() {

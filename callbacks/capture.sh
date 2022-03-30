@@ -17,11 +17,13 @@ function add_exif_comment() {
     local file="$1"
     local comment="$2"
     if hash exiftool; then
-        exiftool -Comment="$url" "$file_path" && rm "${file_path}_original"
+        exiftool -q -Comment="$url" "$file_path" && rm "${file_path}_original" > /dev/null
     elif hash jhead; then
-        jhead -cl "$url" "$file_path"
+        jhead -cl "$url" "$file_path" > /dev/null
     fi
 }
 
-capture "$url" "$file_path" && add_exif_comment "$file_path" "$url"
+capture "$url" "$file_path" \
+    && add_exif_comment "$file_path" "$url" \
+    && echo "[+] $url"
 
