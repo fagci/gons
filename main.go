@@ -8,23 +8,25 @@ import (
 	"gons/src/services"
 	"gons/src/utils"
 	"os"
-	"runtime/pprof"
 	"strings"
 	"sync"
 	"time"
 )
 
 var (
-	randomIPsCount                   int64
-	scanWorkers, callbackConcurrency int
-	connTimeout, callbackTimeout     time.Duration
-	callback                         string
-	callbackI, callbackE, callbackW  bool
-	scanPorts                        string
-	service                          string
-	rtspPort                         int
-	fuzzDict                         string
-	cpuprofile, memprofile           string
+	randomIPsCount int64
+	scanWorkers    int
+	connTimeout    time.Duration
+	scanPorts      string
+	service        string
+	fuzzDict       string
+)
+
+var (
+	callback                        string
+	callbackTimeout                 time.Duration
+	callbackConcurrency             int
+	callbackI, callbackE, callbackW bool
 )
 
 func init() {
@@ -47,33 +49,10 @@ func init() {
 
 	flag.StringVar(&service, "s", "", "check service (rtsp, ...)")
 	flag.StringVar(&fuzzDict, "d", "./data/rtsp-paths.txt", "dictionary to fuzz")
-
-	flag.StringVar(&cpuprofile, "profcpu", "", "profile cpu")
-	flag.StringVar(&memprofile, "profmem", "", "profile mem")
 }
 
 func main() {
 	flag.Parse()
-
-	if cpuprofile != "" {
-		f, err := os.Create(cpuprofile)
-		if err != nil {
-			utils.EPrintln("[E]", err)
-			os.Exit(1)
-		}
-		pprof.StartCPUProfile(f)
-		defer pprof.StopCPUProfile()
-	}
-
-	if memprofile != "" {
-		f, err := os.Create(memprofile)
-		if err != nil {
-			utils.EPrintln("[E]", err)
-			os.Exit(1)
-		}
-		defer f.Close()
-		defer pprof.WriteHeapProfile(f)
-	}
 
 	ipGenerator := generators.NewIPGenerator(128, randomIPsCount)
 	processor := services.NewProcessor(ipGenerator, scanWorkers)
@@ -89,7 +68,9 @@ func main() {
 		cbFlags = cbFlags.Set(utils.INFO)
 	}
 
-	if service != "" {
+	if service == "" {
+		processor.AddService(services.NewDummyService())
+	} else {
 		var paths []string
 		var err error
 		if fuzzDict != "" {
@@ -107,14 +88,10 @@ func main() {
 		switch strings.ToLower(service) {
 		case "rtsp":
 			svc = services.NewRTSPService(ports, connTimeout, paths)
-        case "portscan":
-            svc = services.NewPortscanService(ports, connTimeout)
+		case "portscan":
+			svc = services.NewPortscanService(ports, connTimeout)
 		}
 		processor.AddService(svc)
-	}
-
-	if len(processor.Services()) == 0 {
-		processor.AddService(services.NewDummyService())
 	}
 
 	sp := utils.Spinner{}
