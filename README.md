@@ -37,7 +37,7 @@ Netrandom find possible RTSP sources:
 Take snapshots from RTSP stream and write source URL in metadata:
 
 ```sh
-./gons -s rtsp -w 4096 -cb 'bash ./callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
+./gons -s rtsp -cb 'bash ./callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
 ```
 
 Scan 1024 random WAN IPs for open VNC ports:
