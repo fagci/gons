@@ -1,7 +1,7 @@
 package services
 
 import (
-	"gons/src/network"
+	"github.com/fagci/gons/src/network"
 	"net"
 	"sync"
 	"time"

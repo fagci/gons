@@ -1,8 +1,8 @@
 package services
 
 import (
-	"gons/src/protocol"
-	"gons/src/utils"
+	"github.com/fagci/gons/src/protocol"
+	"github.com/fagci/gons/src/utils"
 	"net"
 	"net/url"
 	"strings"

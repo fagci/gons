@@ -2,7 +2,7 @@ package services
 
 import (
 	"fmt"
-	"gons/src/utils"
+	"github.com/fagci/gons/src/utils"
 	"net"
 	"strings"
 )

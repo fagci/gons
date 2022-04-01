@@ -3,8 +3,8 @@ package protocol
 import (
 	"errors"
 	"fmt"
-	"gons/src/generators"
-	"gons/src/network"
+	"github.com/fagci/gons/src/generators"
+	"github.com/fagci/gons/src/network"
 	"net"
 	"net/url"
 	"strconv"
