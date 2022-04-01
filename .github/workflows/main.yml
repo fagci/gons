@@ -1,0 +1,23 @@
+name: Release binaries
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  releases-matrix:
+    name: Release Go Binary
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, windows, darwin]
+        goarch: [amd64]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: wangyoucao577/go-release-action@v1.17
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          binary_name: "gons"
+          extra_files: README.md data/ callbacks/
