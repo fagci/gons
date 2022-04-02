@@ -3,24 +3,25 @@ package protocol
 import (
 	"errors"
 	"fmt"
-	"github.com/fagci/gons/src/generators"
-	"github.com/fagci/gons/src/network"
 	"net"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/fagci/gons/src/generators"
+	"github.com/fagci/gons/src/network"
 )
 
 type RTSP struct {
-	Addr    net.Addr
 	timeout time.Duration
 	conn    net.Conn
 	cseq    int
 	paths   []string
+	addr    string
 }
 
-const RW_TIMEOUT = time.Second * 10
+const RW_TIMEOUT = time.Second * 2
 
 const _RTSP_TPL = "%s %s RTSP/1.0\r\n" +
 	"Accept: application/sdp\r\n" +
@@ -28,7 +29,6 @@ const _RTSP_TPL = "%s %s RTSP/1.0\r\n" +
 	"User-Agent: Lavf59.16.100\r\n\r\n"
 
 func (r *RTSP) Request(req string) (int, error) {
-
 	if e := r.conn.SetDeadline(time.Now().Add(RW_TIMEOUT)); e != nil {
 		return 0, e
 	}
@@ -37,18 +37,15 @@ func (r *RTSP) Request(req string) (int, error) {
 		return 0, e
 	}
 
-	responseBytes := make([]byte, 1024)
+	responseBytes := make([]byte, 512)
 	n, e := r.conn.Read(responseBytes)
 	if e != nil {
 		return 0, e
 	}
 
-	response := string(responseBytes[:n])
-
-	f := strings.Fields(response)
-	if len(f) > 2 && strings.HasPrefix(f[0], "RTSP") {
-		code, e := strconv.Atoi(f[1])
-		return code, e
+	f := strings.Fields(string(responseBytes[:n]))
+	if len(f) >= 2 && strings.HasPrefix(f[0], "RTSP") {
+		return strconv.Atoi(f[1])
 	}
 
 	return 0, errors.New("Bad response")
@@ -60,7 +57,7 @@ func (r *RTSP) Query(path string) string {
 	if path == "*" {
 		method = "OPTIONS"
 	} else {
-		path = fmt.Sprintf("rtsp://%s%s", r.Addr.String(), path)
+		path = fmt.Sprintf("rtsp://%s%s", r.addr, path)
 	}
 
 	r.cseq++
@@ -69,9 +66,9 @@ func (r *RTSP) Query(path string) string {
 
 func (r *RTSP) Check() (url.URL, error) {
 	var err error
-    var url url.URL
+	var url url.URL
 
-	if r.conn, err = network.DialTimeout("tcp", r.Addr.String(), r.timeout); err != nil {
+	if r.conn, err = network.DialTimeout("tcp", r.addr, r.timeout); err != nil {
 		return url, err
 	}
 
@@ -100,9 +97,9 @@ func (r *RTSP) Check() (url.URL, error) {
 		if err != nil {
 			return url, err
 		}
-        if code == 401 {
-            return url, errors.New("RTSP: unauthorized")
-        }
+		if code == 401 {
+			return url, errors.New("RTSP: unauthorized")
+		}
 		if code == 200 {
 			return r.result(path), nil
 		}
@@ -114,15 +111,15 @@ func (r *RTSP) Check() (url.URL, error) {
 func (r *RTSP) result(path string) url.URL {
 	return url.URL{
 		Scheme: "rtsp",
-		Host:   r.Addr.String(),
+		Host:   r.addr,
 		Path:   path,
 	}
 }
 
 func NewRTSP(addr net.Addr, paths []string, timeout time.Duration) *RTSP {
 	return &RTSP{
-		Addr:    addr,
 		timeout: timeout,
 		paths:   paths,
+		addr:    addr.String(),
 	}
 }

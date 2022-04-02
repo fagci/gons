@@ -3,15 +3,16 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/fagci/gons/src/generators"
 	"github.com/fagci/gons/src/loaders"
 	"github.com/fagci/gons/src/network"
 	"github.com/fagci/gons/src/services"
 	"github.com/fagci/gons/src/utils"
-	"os"
-	"strings"
-	"sync"
-	"time"
 )
 
 var (
@@ -34,7 +35,7 @@ var (
 func init() {
 	flag.StringVar(&iface, "i", "", "use specific network interface")
 	flag.Int64Var(&randomIPsCount, "n", -1, "generate N random WAN IPs")
-	flag.IntVar(&scanWorkers, "w", 1024, "workers count")
+	flag.IntVar(&scanWorkers, "w", 64, "workers count")
 	flag.IntVar(&scanWorkers, "workers", 1024, "workers count")
 	flag.DurationVar(&connTimeout, "t", 700*time.Millisecond, "scan connect timeout")
 	flag.DurationVar(&connTimeout, "timeout", 700*time.Millisecond, "scan connect timeout")
@@ -65,7 +66,8 @@ func main() {
 		utils.EPrintln("[i] Using iface", iface)
 	}
 
-	ipGenerator := generators.NewIPGenerator(128, randomIPsCount)
+	ipGenerator := generators.NewIPGenerator(4, randomIPsCount)
+	utils.EPrintln("[i] workers", scanWorkers)
 	processor := services.NewProcessor(ipGenerator, scanWorkers)
 
 	var cbFlags utils.Flags
