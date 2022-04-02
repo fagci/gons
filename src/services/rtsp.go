@@ -1,13 +1,14 @@
 package services
 
 import (
-	"github.com/fagci/gons/src/protocol"
-	"github.com/fagci/gons/src/utils"
 	"net"
 	"net/url"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/fagci/gons/src/protocol"
+	"github.com/fagci/gons/src/utils"
 )
 
 type RTSPService struct {
@@ -42,13 +43,11 @@ func (s *RTSPService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.
 func (s *RTSPService) Check(host net.IP, ch chan<- HostResult, swg *sync.WaitGroup) {
 	defer swg.Done()
 	var wg sync.WaitGroup
-	go func() {
-		for _, port := range s.Ports {
-			addr := net.TCPAddr{IP: host, Port: port}
-			wg.Add(1)
-			go s.ScanAddr(addr, ch, &wg)
-		}
-	}()
+	for _, port := range s.Ports {
+		addr := net.TCPAddr{IP: host, Port: port}
+		wg.Add(1)
+		go s.ScanAddr(addr, ch, &wg)
+	}
 	wg.Wait()
 }
 

@@ -25,14 +25,12 @@ func (s *PortscanService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *s
 }
 
 func (s *PortscanService) Check(ip net.IP, ch chan<- HostResult, swg *sync.WaitGroup) {
-    defer swg.Done()
+	defer swg.Done()
 	var wg sync.WaitGroup
-	go func() {
-		for _, port := range s.Ports {
-			addr := net.TCPAddr{IP: ip, Port: port}
-			wg.Add(1)
-			go s.ScanAddr(addr, ch, &wg)
-		}
-		wg.Wait()
-	}()
+	for _, port := range s.Ports {
+		addr := net.TCPAddr{IP: ip, Port: port}
+		wg.Add(1)
+		go s.ScanAddr(addr, ch, &wg)
+	}
+	wg.Wait()
 }
