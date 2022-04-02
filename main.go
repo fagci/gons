@@ -63,11 +63,10 @@ func main() {
 			utils.EPrintln("[E] iface", err)
 			return
 		}
-		utils.EPrintln("[i] Using iface", iface)
+		utils.EPrintln("[i] Iface", iface)
 	}
 
 	ipGenerator := generators.NewIPGenerator(4, randomIPsCount)
-	utils.EPrintln("[i] workers", scanWorkers)
 	processor := services.NewProcessor(ipGenerator, scanWorkers)
 
 	var cbFlags utils.Flags
@@ -107,6 +106,10 @@ func main() {
 
 		if svc != nil {
 			utils.EPrintln("[i] Using", service)
+			utils.EPrintln("[i] Workers", scanWorkers)
+			if randomIPsCount > 0 {
+				utils.EPrintln("[i] Random IPs count", randomIPsCount)
+			}
 			processor.AddService(svc)
 		}
 	}
