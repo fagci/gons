@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fagci/gons/generators"
+	"github.com/fagci/gonr/generators"
 	"github.com/fagci/gons/loaders"
 	"github.com/fagci/gons/network"
 	"github.com/fagci/gons/services"

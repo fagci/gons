@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fagci/gons/generators"
+	"github.com/fagci/gonr/generators"
 	"github.com/fagci/gons/network"
 )
 
