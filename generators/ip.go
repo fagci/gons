@@ -42,9 +42,9 @@ func (g *IPGenerator) Generate() <-chan net.IP {
 		defer close(g.ch)
 		for {
 			g.ch <- g.GenerateIP()
-            if g.max < 0 {
-                continue
-            }
+			if g.max < 0 {
+				continue
+			}
 			g.i++
 			if g.i >= g.max {
 				return

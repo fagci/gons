@@ -8,9 +8,9 @@ import (
 
 func ParseRange(r string) []int {
 	var values []int
-    if len(r) == 0 {
-        return values
-    }
+	if len(r) == 0 {
+		return values
+	}
 	parts := strings.Split(r, ",")
 	for _, part := range parts {
 		fromTo := strings.Split(part, "-")

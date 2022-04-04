@@ -51,9 +51,9 @@ func (p *Processor) work(ipGeneratorChannel <-chan net.IP, wg *sync.WaitGroup) {
 	var swg sync.WaitGroup
 	for ip := range ipGeneratorChannel {
 		for _, svc := range p.services {
-            swg.Add(1)
+			swg.Add(1)
 			go svc.Check(ip, p.ch, &swg)
 		}
 	}
-    swg.Wait()
+	swg.Wait()
 }

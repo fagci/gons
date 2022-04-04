@@ -57,9 +57,9 @@ func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration, flags
 	case err := <-done:
 		if err != nil && flags.Has(ERR) {
 			EPrintln("[W:CB:E]", "'"+command+"'", err)
-            if stderr.Len() != 0 {
-                EPrintf("[i:CB:err] %s", stderr.String())
-            }
+			if stderr.Len() != 0 {
+				EPrintf("[i:CB:err] %s", stderr.String())
+			}
 		}
 		if flags.Has(INFO) && stdout.Len() != 0 {
 			fmt.Print(stdout.String())
