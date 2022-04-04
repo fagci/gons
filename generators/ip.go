@@ -14,6 +14,7 @@ type IPGenerator struct {
 	i   int64
 }
 
+// Generates single WAN IP
 func (g *IPGenerator) GenerateIP() net.IP {
 	var intip uint32
 	for {
@@ -37,6 +38,8 @@ func (g *IPGenerator) GenerateIP() net.IP {
 	return net.IPv4(byte(intip>>24), byte(intip>>16), byte(intip>>8), byte(intip))
 }
 
+// Generates WAN IPs to g.max count,
+// passed when generator created via NewIPGenerator
 func (g *IPGenerator) Generate() <-chan net.IP {
 	go func() {
 		defer close(g.ch)
@@ -55,6 +58,7 @@ func (g *IPGenerator) Generate() <-chan net.IP {
 	return g.ch
 }
 
+// Creates new WAN IP generator with capacity of channel and max count of IPs to generate via  Generate()
 func NewIPGenerator(capacity int, max int64) *IPGenerator {
 	b := make([]byte, 8)
 	_, err := crypto_rand.Read(b)
