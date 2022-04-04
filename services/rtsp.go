@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fagci/gons/src/protocol"
-	"github.com/fagci/gons/src/utils"
+	"github.com/fagci/gons/protocol"
+	"github.com/fagci/gons/utils"
 )
 
 type RTSPService struct {

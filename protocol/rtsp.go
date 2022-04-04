@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fagci/gons/src/generators"
-	"github.com/fagci/gons/src/network"
+	"github.com/fagci/gons/generators"
+	"github.com/fagci/gons/network"
 )
 
 type RTSP struct {

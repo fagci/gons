@@ -20,4 +20,4 @@ jobs:
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
           binary_name: "gons"
-          extra_files: README.md LICENSE data/ callbacks/
+          extra_files: README.md LICENSE assets/

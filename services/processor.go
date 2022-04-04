@@ -1,7 +1,7 @@
 package services
 
 import (
-	"github.com/fagci/gons/src/generators"
+	"github.com/fagci/gons/generators"
 	"net"
 	"sync"
 )

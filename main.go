@@ -8,11 +8,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/fagci/gons/src/generators"
-	"github.com/fagci/gons/src/loaders"
-	"github.com/fagci/gons/src/network"
-	"github.com/fagci/gons/src/services"
-	"github.com/fagci/gons/src/utils"
+	"github.com/fagci/gons/generators"
+	"github.com/fagci/gons/loaders"
+	"github.com/fagci/gons/network"
+	"github.com/fagci/gons/services"
+	"github.com/fagci/gons/utils"
 )
 
 var (
@@ -44,7 +44,7 @@ func init() {
 	flag.StringVar(&scanPorts, "ports", "", "scan ports on every rarget")
 
 	flag.StringVar(&service, "s", "", "check service (rtsp, ...)")
-	flag.StringVar(&fuzzDict, "d", "./data/rtsp-paths.txt", "dictionary to fuzz")
+	flag.StringVar(&fuzzDict, "d", "./assets/data/rtsp-paths.txt", "dictionary to fuzz")
 
 	flag.StringVar(&callback, "cb", "", "callback to run as shell command. Use {result} as template")
 	flag.StringVar(&callback, "callback", "", "callback to run as shell command. Use {result} as template")
