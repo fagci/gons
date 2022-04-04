@@ -17,7 +17,7 @@
 go build
 ```
 
-To get smaller binsry:
+To get smaller binary:
 
 ```sh
 go build -ldflags="-s -w"
