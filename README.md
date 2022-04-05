@@ -50,6 +50,18 @@ Scan 1024 random WAN IPs for open VNC ports:
 ./gons -n 1024 -s portscan -ports 5900-5902
 ```
 
+Scan local subnet for http(s) servers:
+
+```sh
+./gons -net 192.168.0.1/24 -s portscan -p 80,443
+```
+
+Scan subnet for RTSP servers:
+
+```sh
+./gons -net 192.168.0.1/24 -s rtsp
+```
+
 ## Testing
 
 ```sh
