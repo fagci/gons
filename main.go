@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"strings"
 	"sync"
@@ -18,6 +19,7 @@ import (
 var (
 	iface          string
 	randomIPsCount int64
+	cidrNetwork    string
 	scanWorkers    int
 	connTimeout    time.Duration
 	scanPorts      string
@@ -35,6 +37,7 @@ var (
 func init() {
 	flag.StringVar(&iface, "i", "", "use specific network interface")
 	flag.Int64Var(&randomIPsCount, "n", -1, "generate N random WAN IPs")
+	flag.StringVar(&cidrNetwork, "net", "", "Network in CIDR notation to scan in random order")
 	flag.IntVar(&scanWorkers, "w", 64, "workers count")
 	flag.IntVar(&scanWorkers, "workers", 1024, "workers count")
 	flag.DurationVar(&connTimeout, "t", 700*time.Millisecond, "scan connect timeout")
@@ -66,8 +69,14 @@ func main() {
 		utils.EPrintln("[i] Iface", iface)
 	}
 
-	ipGenerator := generators.NewIPGenerator(4, randomIPsCount)
-	processor := services.NewProcessor(ipGenerator, scanWorkers)
+	var ipSource <-chan net.IP
+	if cidrNetwork == "" {
+		ipGenerator := generators.NewIPGenerator(4, randomIPsCount)
+		ipSource = ipGenerator.Generate()
+	} else {
+		ipSource = generators.RandomHostsFromCIDRGen(cidrNetwork)
+	}
+	processor := services.NewProcessor(ipSource, scanWorkers)
 
 	var cbFlags utils.Flags
 	if !callbackE {

@@ -1,22 +1,21 @@
 package services
 
 import (
-	"github.com/fagci/gonr/generators"
 	"net"
 	"sync"
 )
 
 type Processor struct {
 	WorkersCount int
-	generator    *generators.IPGenerator
+	ipSource     <-chan net.IP
 	services     []Service
 	ch           chan HostResult
 }
 
-func NewProcessor(generator *generators.IPGenerator, workersCount int) *Processor {
+func NewProcessor(ipSource <-chan net.IP, workersCount int) *Processor {
 	return &Processor{
 		WorkersCount: workersCount,
-		generator:    generator,
+		ipSource:     ipSource,
 	}
 }
 
@@ -32,10 +31,9 @@ func (p *Processor) Process() <-chan HostResult {
 	var wg sync.WaitGroup
 	p.ch = make(chan HostResult)
 
-	ipGeneratorChannel := p.generator.Generate()
 	for i := 0; i < p.WorkersCount; i++ {
 		wg.Add(1)
-		go p.work(ipGeneratorChannel, &wg)
+		go p.work(p.ipSource, &wg)
 	}
 
 	go func() {
