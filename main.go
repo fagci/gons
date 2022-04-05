@@ -39,7 +39,7 @@ func init() {
 	flag.Int64Var(&randomIPsCount, "n", -1, "generate N random WAN IPs")
 	flag.StringVar(&cidrNetwork, "net", "", "Network in CIDR notation to scan in random order")
 	flag.IntVar(&scanWorkers, "w", 64, "workers count")
-	flag.IntVar(&scanWorkers, "workers", 1024, "workers count")
+	flag.IntVar(&scanWorkers, "workers", 64, "workers count")
 	flag.DurationVar(&connTimeout, "t", 700*time.Millisecond, "scan connect timeout")
 	flag.DurationVar(&connTimeout, "timeout", 700*time.Millisecond, "scan connect timeout")
 
