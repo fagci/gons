@@ -20,6 +20,7 @@ var (
 	iface          string
 	randomIPsCount int64
 	cidrNetwork    string
+	ipList         string
 	scanWorkers    int
 	connTimeout    time.Duration
 	scanPorts      string
@@ -38,6 +39,7 @@ func init() {
 	flag.StringVar(&iface, "i", "", "use specific network interface")
 	flag.Int64Var(&randomIPsCount, "n", -1, "generate N random WAN IPs")
 	flag.StringVar(&cidrNetwork, "net", "", "Network in CIDR notation to scan in random order")
+	flag.StringVar(&ipList, "list", "", "IP/networks list (CIDR) to scan in random order")
 	flag.IntVar(&scanWorkers, "w", 64, "workers count")
 	flag.IntVar(&scanWorkers, "workers", 64, "workers count")
 	flag.DurationVar(&connTimeout, "t", 700*time.Millisecond, "scan connect timeout")
@@ -58,37 +60,7 @@ func init() {
 	flag.BoolVar(&callbackE, "cbde", false, "disable callback errors")
 }
 
-func main() {
-	flag.Parse()
-
-	if iface != "" {
-		if err := network.SetInterface(iface); err != nil {
-			utils.EPrintln("[E] iface", err)
-			return
-		}
-		utils.EPrintln("[i] Iface", iface)
-	}
-
-	var ipSource <-chan net.IP
-	if cidrNetwork == "" {
-		ipGenerator := generators.NewIPGenerator(4, randomIPsCount)
-		ipSource = ipGenerator.Generate()
-	} else {
-		ipSource = generators.RandomHostsFromCIDRGen(cidrNetwork)
-	}
-	processor := services.NewProcessor(ipSource, scanWorkers)
-
-	var cbFlags utils.Flags
-	if !callbackE {
-		cbFlags = cbFlags.Set(utils.ERR)
-	}
-	if !callbackW {
-		cbFlags = cbFlags.Set(utils.WARN)
-	}
-	if !callbackI {
-		cbFlags = cbFlags.Set(utils.INFO)
-	}
-
+func setupSercices(processor *services.Processor) {
 	if service == "" {
 		processor.AddService(services.NewDummyService())
 	} else {
@@ -122,6 +94,19 @@ func main() {
 			processor.AddService(svc)
 		}
 	}
+}
+
+func process(processor *services.Processor) {
+	var cbFlags utils.Flags
+	if !callbackE {
+		cbFlags = cbFlags.Set(utils.ERR)
+	}
+	if !callbackW {
+		cbFlags = cbFlags.Set(utils.WARN)
+	}
+	if !callbackI {
+		cbFlags = cbFlags.Set(utils.INFO)
+	}
 
 	sp := utils.Spinner{}
 	sp.Start()
@@ -153,4 +138,36 @@ func main() {
 			sp.Start()
 		}
 	}
+}
+
+func main() {
+	flag.Parse()
+
+	if iface != "" {
+		if err := network.SetInterface(iface); err != nil {
+			utils.EPrintln("[E] iface", err)
+			return
+		}
+		utils.EPrintln("[i] Iface", iface)
+	}
+
+	var ipSource <-chan net.IP
+	if ipList != "" {
+        list, err := utils.LoadInput(ipList)
+        if err != nil {
+			utils.EPrintln("[E] IP list", err)
+			return
+        }
+        ipSource = generators.RandomHostsFromListGen(list)
+	} else if cidrNetwork == "" {
+		ipGenerator := generators.NewIPGenerator(4, randomIPsCount)
+		ipSource = ipGenerator.Generate()
+	} else {
+		ipSource = generators.RandomHostsFromCIDRGen(cidrNetwork)
+	}
+
+	processor := services.NewProcessor(ipSource, scanWorkers)
+
+	setupSercices(processor)
+	process(processor)
 }

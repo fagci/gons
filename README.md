@@ -66,6 +66,16 @@ Scan subnet for RTSP servers:
 ./gons -net 192.168.0.1/24 -s rtsp
 ```
 
+Scan list of networks and hosts:
+
+```sh
+./gons -list city_cidrs.txt -s rtsp
+```
+
+```sh
+cat city_cidrs.txt | ./gons -s rtsp -list -
+```
+
 ## Testing
 
 ```sh
