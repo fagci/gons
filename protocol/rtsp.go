@@ -21,8 +21,6 @@ type RTSP struct {
 	addr    string
 }
 
-const RW_TIMEOUT = time.Second * 5
-
 const _RTSP_TPL = "%s %s RTSP/1.0\r\n" +
 	"Accept: application/sdp\r\n" +
 	"CSeq: %d\r\n" +

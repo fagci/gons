@@ -29,6 +29,10 @@ var (
 )
 
 var (
+    headerReg, bodyReg string
+)
+
+var (
 	callback                        string
 	callbackTimeout                 time.Duration
 	callbackConcurrency             int
@@ -50,6 +54,9 @@ func init() {
 
 	flag.StringVar(&service, "s", "", "check service (rtsp, ...)")
 	flag.StringVar(&fuzzDict, "d", "./assets/data/rtsp-paths.txt", "dictionary to fuzz")
+
+	flag.StringVar(&headerReg, "rh", "", "Regexp for header")
+	flag.StringVar(&bodyReg, "rb", "", "Regexp for body")
 
 	flag.StringVar(&callback, "cb", "", "callback to run as shell command. Use {result} as template")
 	flag.StringVar(&callback, "callback", "", "callback to run as shell command. Use {result} as template")
@@ -79,6 +86,8 @@ func setupSercices(processor *services.Processor) {
 		var svc services.Service
 
 		switch strings.ToLower(service) {
+		case "http":
+			svc = services.NewHTTPService(ports, connTimeout, paths, headerReg, bodyReg)
 		case "rtsp":
 			svc = services.NewRTSPService(ports, connTimeout, paths)
 		case "portscan":

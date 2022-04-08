@@ -1,0 +1,4 @@
+/-wvhttp-01-/image.cgi?v=jpg:640x480
+/nphMotionJpeg?Resolution=640x480&Quality=Standard
+/ViewerFrame?Mode=Motion&Language=0
+/mjpg/video.mjpg
