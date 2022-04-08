@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fagci/gonr/generators"
 	"github.com/fagci/gons/network"
 )
 
@@ -20,12 +19,14 @@ type HTTP struct {
 	timeout            time.Duration
 	conn               net.Conn
 	paths              []string
-	addr               string
+	addr, host         string
 	headerReg, bodyReg *regexp.Regexp
 }
 
 const _HTTP_TPL = "%s %s HTTP/1.0\r\n" +
-	"User-Agent: Mozilla/5.0\r\n\r\n"
+	"Host: %s\r\n" +
+	"User-Agent: Mozilla/5.0\r\n" +
+	"Accept: */*\r\n\r\n"
 
 func (r *HTTP) Request(req string) (int, error) {
 	if e := r.conn.SetDeadline(time.Now().Add(RW_TIMEOUT)); e != nil {
@@ -49,11 +50,12 @@ func (r *HTTP) Request(req string) (int, error) {
 		return 0, errors.New("Bad response")
 	}
 	code, err := strconv.Atoi(f[1])
-	if err != nil || code != 200 {
+	if err != nil || code >= 400 {
 		return code, err
 	}
 
 	isHeader := true
+	isText := false
 	for {
 		line, err := tp.ReadLine()
 		if err != nil {
@@ -61,6 +63,15 @@ func (r *HTTP) Request(req string) (int, error) {
 		}
 		if line == "" {
 			isHeader = false
+			if !isText {
+				break
+			}
+		}
+		/* if isHeader {
+			fmt.Println(line)
+		} */
+		if isHeader && !isText && strings.Index(line, "text/") > 0 {
+			isText = true
 		}
 		if isHeader && r.headerReg != nil {
 			if r.headerReg.MatchString(line) {
@@ -73,6 +84,9 @@ func (r *HTTP) Request(req string) (int, error) {
 			}
 		}
 	}
+    if r.headerReg != nil || r.bodyReg != nil {
+        return 0, nil
+    }
 
 	return code, nil
 }
@@ -82,7 +96,7 @@ func (r *HTTP) Query(path string) string {
 
 	path = fmt.Sprintf("http://%s%s", r.addr, path)
 
-	return fmt.Sprintf(_HTTP_TPL, method, path)
+	return fmt.Sprintf(_HTTP_TPL, method, path, r.addr)
 }
 
 func (r *HTTP) Check() (url.URL, error) {
@@ -96,14 +110,6 @@ func (r *HTTP) Check() (url.URL, error) {
 	defer r.conn.Close()
 
 	var code int
-	code, err = r.Request(r.Query(generators.RandomPath(6, 12)))
-	if err != nil {
-		return url, err
-	}
-
-	if code == 200 {
-		return url, errors.New("HTTP: fake")
-	}
 
 	for _, path := range r.paths {
 		code, err = r.Request(r.Query(path))
@@ -134,6 +140,7 @@ func NewHTTP(addr net.Addr, paths []string, timeout time.Duration, headerReg, bo
 		timeout:   timeout,
 		paths:     paths,
 		addr:      addr.String(),
+		host:      addr.(*net.TCPAddr).IP.String(),
 		headerReg: headerReg,
 		bodyReg:   bodyReg,
 	}

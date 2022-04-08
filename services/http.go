@@ -24,7 +24,7 @@ var _ Service = &HTTPService{}
 
 func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, headerReg, bodyReg string) *HTTPService {
 	if len(ports) == 0 {
-		ports = append(ports, 554)
+		ports = append(ports, 80)
 	}
     svc := HTTPService{
 		Ports:       ports,
