@@ -5,6 +5,8 @@
 ### Netrandom
 
 - RTSP fuzzer
+- HTTP fuzzer
+- HTTP headers, body regexp matching test
 - random WAN IP generator
 - random WAN IP port (range) scanner
 
