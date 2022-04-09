@@ -1,6 +1,7 @@
 package network
 
 import (
+	"context"
 	"net"
 	"time"
 )
@@ -32,10 +33,19 @@ func SetInterface(iface string) error {
 }
 
 func DialTimeout(network string, address string, timeout time.Duration) (net.Conn, error) {
-	var _d net.Dialer
-
-	_d.Timeout = timeout
-	_d.LocalAddr = dialService.LocalAddr
+	_d := net.Dialer{
+		Timeout:   timeout,
+		LocalAddr: dialService.LocalAddr,
+	}
 
 	return _d.Dial(network, address)
+}
+
+func DialContextFunc(timeout time.Duration) func(ctx context.Context, network, address string) (net.Conn, error) {
+	_d := net.Dialer{
+		Timeout:   timeout,
+		LocalAddr: dialService.LocalAddr,
+	}
+
+	return _d.DialContext
 }

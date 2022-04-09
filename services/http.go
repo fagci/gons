@@ -1,7 +1,6 @@
 package services
 
 import (
-	"crypto/tls"
 	"io"
 	"net"
 	"net/http"
@@ -38,8 +37,9 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 		paths:       paths,
 	}
 
-	tlsConfig := &tls.Config{InsecureSkipVerify: true}
-	transport := &http.Transport{Dial: svc.dial, TLSClientConfig: tlsConfig, DisableKeepAlives: true}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.TLSClientConfig.InsecureSkipVerify = true
+	transport.DialContext = network.DialContextFunc(svc.connTimeout)
 
 	svc.client = &http.Client{
 		Transport: transport,
@@ -137,10 +137,6 @@ func (s *HTTPService) Check(host net.IP, ch chan<- HostResult, swg *sync.WaitGro
 		go s.ScanAddr(addr, ch, &wg)
 	}
 	wg.Wait()
-}
-
-func (s *HTTPService) dial(n, addr string) (net.Conn, error) {
-	return network.DialTimeout(n, addr, s.connTimeout)
 }
 
 type HTTPResult struct {
