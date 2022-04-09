@@ -57,7 +57,7 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 
 func (s *HTTPService) check(uri url.URL) (bool, error) {
 	tlsConfig := &tls.Config{InsecureSkipVerify: true}
-	transport := &http.Transport{Dial: s.dial, TLSClientConfig: tlsConfig}
+	transport := &http.Transport{Dial: s.dial, TLSClientConfig: tlsConfig, DisableKeepAlives: true}
 
 	c := &http.Client{Transport: transport}
 
