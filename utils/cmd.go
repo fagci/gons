@@ -18,7 +18,7 @@ const (
 	INFO
 )
 
-var forbiddenCharsRegexp = regexp.MustCompile("[$\"'`]")
+var forbiddenInQuotesCharsRegexp = regexp.MustCompile("[$\"'`]")
 
 func (b Flags) Set(flag Flags) Flags    { return b | flag }
 func (b Flags) Clear(flag Flags) Flags  { return b &^ flag }
