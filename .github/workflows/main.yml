@@ -20,4 +20,5 @@ jobs:
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
           binary_name: "gons"
+          ldflags: "-s"
           extra_files: README.md LICENSE assets/
