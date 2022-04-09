@@ -1,14 +1,17 @@
 package services
 
 import (
+	"bufio"
 	"net"
+	"net/http"
+	"net/textproto"
 	"net/url"
 	"regexp"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/fagci/gons/protocol"
+	"github.com/fagci/gons/network"
 	"github.com/fagci/gons/utils"
 )
 
@@ -26,37 +29,96 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 	if len(ports) == 0 {
 		ports = append(ports, 80)
 	}
-    svc := HTTPService{
+	svc := HTTPService{
 		Ports:       ports,
 		connTimeout: connTimeout,
 		paths:       paths,
 	}
 
-    if headerReg != "" {
-        hReg, err := regexp.Compile(headerReg)
-        if err !=nil {
-            panic("Bad headerReg: " + err.Error())
-        }
-        svc.headerReg = hReg
-    }
+	if headerReg != "" {
+		hReg, err := regexp.Compile(headerReg)
+		if err != nil {
+			panic("Bad headerReg: " + err.Error())
+		}
+		svc.headerReg = hReg
+	}
 
-    if bodyReg != "" {
-        bReg, err := regexp.Compile(bodyReg)
-        if err !=nil {
-            panic("Bad bodyReg: " + err.Error())
-        }
-        svc.bodyReg = bReg
-    }
+	if bodyReg != "" {
+		bReg, err := regexp.Compile(bodyReg)
+		if err != nil {
+			panic("Bad bodyReg: " + err.Error())
+		}
+		svc.bodyReg = bReg
+	}
 
-    return &svc
+	return &svc
 }
+
+func (s *HTTPService) check(uri url.URL) bool {
+	transport := http.Transport{
+		Dial: func(n, addr string) (net.Conn, error) {
+			return network.DialTimeout(n, addr, s.connTimeout)
+		},
+	}
+	c := http.Client{
+		Transport: &transport,
+	}
+
+	r, err := c.Get(uri.String())
+	if err != nil {
+		return false
+	}
+
+	isText := false
+	defer r.Body.Close()
+
+	for k, values := range r.Header {
+		for _, v := range values {
+			if k == "Content-Type" && strings.Contains(v, "text/") {
+				isText = true
+			}
+			if s.headerReg != nil && s.headerReg.MatchString(v) {
+				return true
+			}
+		}
+	}
+
+	if !isText {
+		return false
+	}
+
+	reader := bufio.NewReader(r.Body)
+	tr := textproto.NewReader(reader)
+	for {
+		line, err := tr.ReadLine()
+		if err != nil {
+			break
+		}
+		if s.bodyReg != nil && s.bodyReg.MatchString(line) {
+			return true
+		}
+	}
+
+	if s.headerReg == nil && s.bodyReg == nil && r.StatusCode < 400 {
+		return true
+	}
+
+	return false
+}
+
 func (s *HTTPService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.WaitGroup) {
 	defer wg.Done()
-	r := protocol.NewHTTP(&addr, s.paths, s.connTimeout, s.headerReg, s.bodyReg)
-	if res, err := r.Check(); err == nil {
-		ch <- HostResult{
-			Addr:    &addr,
-			Details: &HTTPResult{Url: res},
+	scheme := "http"
+	if addr.Port == 443 {
+		scheme = "https"
+	}
+	for _, path := range s.paths {
+		uri := url.URL{Scheme: scheme, Host: addr.String(), Path: path}
+		if s.check(uri) {
+			ch <- HostResult{
+				Addr:    &addr,
+				Details: &HTTPResult{Url: uri},
+			}
 		}
 	}
 }
