@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"sync"
 	"time"
@@ -16,6 +17,8 @@ const (
 	WARN
 	INFO
 )
+
+var forbiddenCharsRegexp = regexp.MustCompile("[$\"'`]")
 
 func (b Flags) Set(flag Flags) Flags    { return b | flag }
 func (b Flags) Clear(flag Flags) Flags  { return b &^ flag }
@@ -65,4 +68,8 @@ func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration, flags
 			fmt.Print(stdout.String())
 		}
 	}
+}
+
+func FilterValueInQuotes(v string) string {
+    return forbiddenInQuotesCharsRegexp.ReplaceAllString(v, "")
 }
