@@ -1,11 +1,10 @@
 package services
 
 import (
-	"bufio"
 	"crypto/tls"
+	"io"
 	"net"
 	"net/http"
-	"net/textproto"
 	"net/url"
 	"regexp"
 	"strings"
@@ -66,38 +65,37 @@ func (s *HTTPService) check(uri url.URL) bool {
 	if err != nil {
 		return false
 	}
-
-	isText := false
 	defer r.Body.Close()
+	defer c.CloseIdleConnections()
+
+	if r.StatusCode > 400 {
+		return false
+	}
 
 	for k, values := range r.Header {
 		for _, v := range values {
-			if k == "Content-Type" && strings.Contains(v, "text/") {
-				isText = true
-			}
-			if s.headerReg != nil && s.headerReg.MatchString(v) {
+			if s.headerReg != nil && s.headerReg.MatchString(k+": "+v) {
 				return true
 			}
 		}
 	}
 
-	if !isText {
+	if r.ContentLength == -1 || r.ContentLength > 1024*1024 {
 		return false
 	}
 
-	reader := bufio.NewReader(r.Body)
-	tr := textproto.NewReader(reader)
-	for {
-		line, err := tr.ReadLine()
-		if err != nil {
-			break
-		}
-		if s.bodyReg != nil && s.bodyReg.MatchString(line) {
-			return true
-		}
+	reader := io.LimitReader(r.Body, 1024*1024)
+	b, err := io.ReadAll(reader)
+
+	if err != nil {
+		return false
 	}
 
-	if s.headerReg == nil && s.bodyReg == nil && r.StatusCode < 400 {
+	if s.bodyReg != nil && s.bodyReg.Match(b) {
+		return true
+	}
+
+	if s.headerReg == nil && s.bodyReg == nil {
 		return true
 	}
 

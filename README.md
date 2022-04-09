@@ -76,6 +76,18 @@ Scan list of networks and hosts:
 cat city_cidrs.txt | ./gons -s rtsp -list -
 ```
 
+Search for public resources over http:
+
+```sh
+./gons -s http -d ./assets/data/http-pub-paths.txt -rb "Index of"
+```
+
+Search for public mjpeg webcams:
+
+```sh
+./gons -s http -d ./assets/data/http-cam-paths.txt -i tun0 -rh "(image/jpeg|multipart/x-mixed-replace)"
+```
+
 ## Testing
 
 ```sh

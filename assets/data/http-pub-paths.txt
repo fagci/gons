@@ -1,0 +1,6 @@
+/content/uploads
+/files
+/public
+/upload
+/uploads
+/wp-content/uploads
