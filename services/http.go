@@ -17,35 +17,34 @@ import (
 )
 
 type HTTPService struct {
-	Ports       []int
-	connTimeout time.Duration
-	paths       []string
-	headerReg   *regexp.Regexp
-	bodyReg     *regexp.Regexp
-	client      *http.Client
+	*Service
+	timeout   time.Duration
+	paths     []string
+	headerReg *regexp.Regexp
+	bodyReg   *regexp.Regexp
+	client    *http.Client
 }
 
 const MAX_HTTP_BODY_LENGTH = 1024 * 1024
 
-var _ Service = &HTTPService{}
-
-func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, headerReg, bodyReg string) *HTTPService {
+func NewHTTPService(ports []int, timeout time.Duration, paths []string, headerReg, bodyReg string) *HTTPService {
 	if len(ports) == 0 {
 		ports = []int{80, 443}
 	}
 
-	svc := HTTPService{
-		Ports:       ports,
-		connTimeout: connTimeout,
-		paths:       paths,
+	s := &HTTPService{
+		timeout: timeout,
+		paths:   paths,
+		Service: &Service{Ports: ports},
 	}
+	s.ServiceInterface = interface{}(s).(ServiceInterface)
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.TLSClientConfig.InsecureSkipVerify = true
-	transport.DialContext = network.DialContextFunc(svc.connTimeout)
+	transport.DialContext = network.DialContextFunc(s.timeout)
 	transport.DisableKeepAlives = true // less memory leak, less errors
 
-	svc.client = &http.Client{
+	s.client = &http.Client{
 		Transport: transport,
 		Timeout:   protocol.RW_TIMEOUT,
 	}
@@ -55,7 +54,7 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 		if err != nil {
 			panic("Bad headerReg: " + err.Error())
 		}
-		svc.headerReg = hReg
+		s.headerReg = hReg
 	}
 
 	if bodyReg != "" {
@@ -63,10 +62,10 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 		if err != nil {
 			panic("Bad bodyReg: " + err.Error())
 		}
-		svc.bodyReg = bReg
+		s.bodyReg = bReg
 	}
 
-	return &svc
+	return s
 }
 
 func (s *HTTPService) check(uri url.URL) (bool, [][]string, error) {
@@ -123,17 +122,6 @@ func (s *HTTPService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.
 	}
 }
 
-func (s *HTTPService) Check(host net.IP, ch chan<- HostResult, swg *sync.WaitGroup) {
-	defer swg.Done()
-	var wg sync.WaitGroup
-	for _, port := range s.Ports {
-		addr := net.TCPAddr{IP: host, Port: port}
-		wg.Add(1)
-		go s.ScanAddr(addr, ch, &wg)
-	}
-	wg.Wait()
-}
-
 type HTTPResult struct {
 	Url     url.URL
 	Matches [][]string
@@ -179,9 +167,9 @@ func (result *HTTPResult) String() string {
 		}
 	}
 
-    if sb.Len() == 0 {
+	if sb.Len() == 0 {
 		return result.Url.String()
-    }
+	}
 
 	return result.Url.String() + "\n" + sb.String()
 }

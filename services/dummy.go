@@ -6,13 +6,16 @@ import (
 )
 
 type DummyService struct {
+	*Service
 }
 
 func NewDummyService() *DummyService {
-	return &DummyService{}
+    s := &DummyService{Service: &Service{}}
+	s.ServiceInterface = interface{}(s).(ServiceInterface)
+	return s
 }
 
-func (ds *DummyService) Check(ip net.IP, ch chan<- HostResult, wg *sync.WaitGroup) {
+func (s *Service) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.WaitGroup) {
 	defer wg.Done()
-	ch <- HostResult{Addr: &net.TCPAddr{IP: ip}}
+	ch <- HostResult{Addr: &addr}
 }

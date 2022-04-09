@@ -1,19 +1,25 @@
 package services
 
 import (
-	"github.com/fagci/gons/network"
 	"net"
 	"sync"
 	"time"
+
+	"github.com/fagci/gons/network"
 )
 
 type PortscanService struct {
-	Ports   []int
+	*Service
 	timeout time.Duration
 }
 
 func NewPortscanService(ports []int, timeout time.Duration) *PortscanService {
-	return &PortscanService{Ports: ports, timeout: timeout}
+	s := &PortscanService{
+		timeout: timeout,
+		Service: &Service{Ports: ports},
+	}
+	s.ServiceInterface = interface{}(s).(ServiceInterface)
+	return s
 }
 
 func (s *PortscanService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.WaitGroup) {
@@ -22,15 +28,4 @@ func (s *PortscanService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *s
 		conn.Close()
 		ch <- HostResult{Addr: &addr}
 	}
-}
-
-func (s *PortscanService) Check(ip net.IP, ch chan<- HostResult, swg *sync.WaitGroup) {
-	defer swg.Done()
-	var wg sync.WaitGroup
-	for _, port := range s.Ports {
-		addr := net.TCPAddr{IP: ip, Port: port}
-		wg.Add(1)
-		go s.ScanAddr(addr, ch, &wg)
-	}
-	wg.Wait()
 }

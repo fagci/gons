@@ -12,43 +12,33 @@ import (
 )
 
 type RTSPService struct {
-	Ports       []int
-	connTimeout time.Duration
-	paths       []string
+	*Service
+	Ports   []int
+	timeout time.Duration
+	paths   []string
 }
 
-var _ Service = &RTSPService{}
-
-func NewRTSPService(ports []int, connTimeout time.Duration, paths []string) *RTSPService {
+func NewRTSPService(ports []int, timeout time.Duration, paths []string) *RTSPService {
 	if len(ports) == 0 {
 		ports = append(ports, 554)
 	}
-	return &RTSPService{
-		Ports:       ports,
-		connTimeout: connTimeout,
-		paths:       paths,
+	s := &RTSPService{
+		timeout: timeout,
+		paths:   paths,
+		Service: &Service{Ports: ports},
 	}
+	s.ServiceInterface = interface{}(s).(ServiceInterface)
+	return s
 }
 func (s *RTSPService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.WaitGroup) {
 	defer wg.Done()
-	r := protocol.NewRTSP(&addr, s.paths, s.connTimeout)
+	r := protocol.NewRTSP(&addr, s.paths, s.timeout)
 	if res, err := r.Check(); err == nil {
 		ch <- HostResult{
 			Addr:    &addr,
 			Details: &RTSPResult{Url: res},
 		}
 	}
-}
-
-func (s *RTSPService) Check(host net.IP, ch chan<- HostResult, swg *sync.WaitGroup) {
-	defer swg.Done()
-	var wg sync.WaitGroup
-	for _, port := range s.Ports {
-		addr := net.TCPAddr{IP: host, Port: port}
-		wg.Add(1)
-		go s.ScanAddr(addr, ch, &wg)
-	}
-	wg.Wait()
 }
 
 type RTSPResult struct {

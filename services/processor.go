@@ -8,7 +8,7 @@ import (
 type Processor struct {
 	WorkersCount int
 	ipSource     <-chan net.IP
-	services     []Service
+	services     []ServiceInterface
 	ch           chan HostResult
 }
 
@@ -19,11 +19,11 @@ func NewProcessor(ipSource <-chan net.IP, workersCount int) *Processor {
 	}
 }
 
-func (p *Processor) AddService(svc Service) {
+func (p *Processor) AddService(svc ServiceInterface) {
 	p.services = append(p.services, svc)
 }
 
-func (p *Processor) Services() []Service {
+func (p *Processor) Services() []ServiceInterface {
 	return p.services
 }
 

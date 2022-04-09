@@ -83,7 +83,7 @@ func setupSercices(processor *services.Processor) {
 
 		ports := utils.ParseRange(scanPorts)
 
-		var svc services.Service
+		var svc services.ServiceInterface
 
 		switch strings.ToLower(service) {
 		case "http":
