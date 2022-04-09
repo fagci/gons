@@ -55,7 +55,7 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 	return &svc
 }
 
-func (s *HTTPService) check(uri url.URL) bool {
+func (s *HTTPService) check(uri url.URL) (bool, error) {
 	tlsConfig := &tls.Config{InsecureSkipVerify: true}
 	transport := &http.Transport{Dial: s.dial, TLSClientConfig: tlsConfig}
 
@@ -63,43 +63,43 @@ func (s *HTTPService) check(uri url.URL) bool {
 
 	r, err := c.Get(uri.String())
 	if err != nil {
-		return false
+		return false, err
 	}
 	defer r.Body.Close()
 	defer c.CloseIdleConnections()
 
 	if r.StatusCode > 400 {
-		return false
+		return false, nil
 	}
 
 	for k, values := range r.Header {
 		for _, v := range values {
 			if s.headerReg != nil && s.headerReg.MatchString(k+": "+v) {
-				return true
+				return true, nil
 			}
 		}
 	}
 
 	if r.ContentLength == -1 || r.ContentLength > 1024*1024 {
-		return false
+		return false, nil
 	}
 
 	reader := io.LimitReader(r.Body, 1024*1024)
 	b, err := io.ReadAll(reader)
 
 	if err != nil {
-		return false
+		return false, nil
 	}
 
 	if s.bodyReg != nil && s.bodyReg.Match(b) {
-		return true
+		return true, nil
 	}
 
 	if s.headerReg == nil && s.bodyReg == nil {
-		return true
+		return true, nil
 	}
 
-	return false
+	return false, nil
 }
 
 func (s *HTTPService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.WaitGroup) {
@@ -110,7 +110,11 @@ func (s *HTTPService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.
 	}
 	for _, path := range s.paths {
 		uri := url.URL{Scheme: scheme, Host: addr.String(), Path: path}
-		if s.check(uri) {
+		ok, err := s.check(uri)
+		if err != nil {
+			break
+		}
+		if ok {
 			ch <- HostResult{
 				Addr:    &addr,
 				Details: &HTTPResult{Url: uri},
