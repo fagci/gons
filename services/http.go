@@ -25,6 +25,8 @@ type HTTPService struct {
 	client      *http.Client
 }
 
+const MAX_HTTP_BODY_LENGTH = 1024 * 1024
+
 var _ Service = &HTTPService{}
 
 func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, headerReg, bodyReg string) *HTTPService {
@@ -68,6 +70,7 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 }
 
 func (s *HTTPService) check(uri url.URL) (bool, [][]string, error) {
+	var matches [][]string
 	response, err := s.client.Get(uri.String())
 	if err != nil {
 		return false, nil, err
@@ -79,38 +82,24 @@ func (s *HTTPService) check(uri url.URL) (bool, [][]string, error) {
 		return false, nil, nil
 	}
 
-	for k, values := range response.Header {
-		for _, v := range values {
-			if s.headerReg != nil {
-				if matches := s.headerReg.FindAllStringSubmatch(k+": "+v, -1); matches != nil {
-					return true, matches, nil
-				}
+	if s.headerReg != nil {
+		for k, values := range response.Header {
+			for _, v := range values {
+				matches = append(matches, s.headerReg.FindAllStringSubmatch(k+": "+v, -1)...)
 			}
 		}
 	}
 
-	if response.ContentLength == -1 || response.ContentLength > 1024*1024 {
-		return false, nil, nil
-	}
-
-	reader := io.LimitReader(response.Body, 1024*1024)
-	body, err := io.ReadAll(reader)
-
-	if err != nil {
-		return false, nil, nil
-	}
-
 	if s.bodyReg != nil {
-		if matches := s.bodyReg.FindAllStringSubmatch(string(body), -1); matches != nil {
-			return true, matches, nil
+		body, err := io.ReadAll(io.LimitReader(response.Body, MAX_HTTP_BODY_LENGTH))
+		if err != nil {
+			return false, matches, nil
 		}
+
+		matches = append(matches, s.bodyReg.FindAllStringSubmatch(string(body), -1)...)
 	}
 
-	if s.headerReg == nil && s.bodyReg == nil {
-		return true, nil, nil
-	}
-
-	return false, nil, nil
+	return (s.headerReg == nil && s.bodyReg == nil) || len(matches) != 0, matches, nil
 }
 
 func (s *HTTPService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.WaitGroup) {
@@ -189,6 +178,10 @@ func (result *HTTPResult) String() string {
 			}
 		}
 	}
+
+    if sb.Len() == 0 {
+		return result.Url.String()
+    }
 
 	return result.Url.String() + "\n" + sb.String()
 }
