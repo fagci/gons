@@ -2,6 +2,7 @@ package services
 
 import (
 	"bufio"
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/textproto"
@@ -27,8 +28,9 @@ var _ Service = &HTTPService{}
 
 func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, headerReg, bodyReg string) *HTTPService {
 	if len(ports) == 0 {
-		ports = append(ports, 80)
+		ports = []int{80, 443}
 	}
+
 	svc := HTTPService{
 		Ports:       ports,
 		connTimeout: connTimeout,
@@ -55,14 +57,10 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 }
 
 func (s *HTTPService) check(uri url.URL) bool {
-	transport := http.Transport{
-		Dial: func(n, addr string) (net.Conn, error) {
-			return network.DialTimeout(n, addr, s.connTimeout)
-		},
-	}
-	c := http.Client{
-		Transport: &transport,
-	}
+	tlsConfig := &tls.Config{InsecureSkipVerify: true}
+	transport := &http.Transport{Dial: s.dial, TLSClientConfig: tlsConfig}
+
+	c := &http.Client{Transport: transport}
 
 	r, err := c.Get(uri.String())
 	if err != nil {
@@ -132,6 +130,10 @@ func (s *HTTPService) Check(host net.IP, ch chan<- HostResult, swg *sync.WaitGro
 		go s.ScanAddr(addr, ch, &wg)
 	}
 	wg.Wait()
+}
+
+func (s *HTTPService) dial(n, addr string) (net.Conn, error) {
+	return network.DialTimeout(n, addr, s.connTimeout)
 }
 
 type HTTPResult struct {
