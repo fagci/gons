@@ -22,6 +22,7 @@ type HTTPService struct {
 	paths       []string
 	headerReg   *regexp.Regexp
 	bodyReg     *regexp.Regexp
+	client      *http.Client
 }
 
 var _ Service = &HTTPService{}
@@ -35,6 +36,14 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 		Ports:       ports,
 		connTimeout: connTimeout,
 		paths:       paths,
+	}
+
+	tlsConfig := &tls.Config{InsecureSkipVerify: true}
+	transport := &http.Transport{Dial: svc.dial, TLSClientConfig: tlsConfig, DisableKeepAlives: true}
+
+	svc.client = &http.Client{
+		Transport: transport,
+		Timeout:   protocol.RW_TIMEOUT,
 	}
 
 	if headerReg != "" {
@@ -57,20 +66,12 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 }
 
 func (s *HTTPService) check(uri url.URL) (bool, error) {
-	tlsConfig := &tls.Config{InsecureSkipVerify: true}
-	transport := &http.Transport{Dial: s.dial, TLSClientConfig: tlsConfig, DisableKeepAlives: true}
-
-	c := &http.Client{
-		Transport: transport,
-		Timeout:   protocol.RW_TIMEOUT,
-	}
-
-	r, err := c.Get(uri.String())
+	r, err := s.client.Get(uri.String())
 	if err != nil {
 		return false, err
 	}
+
 	defer r.Body.Close()
-	defer c.CloseIdleConnections()
 
 	if r.StatusCode > 400 {
 		return false, nil
