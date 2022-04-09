@@ -40,6 +40,7 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 	transport.TLSClientConfig.InsecureSkipVerify = true
 	transport.DialContext = network.DialContextFunc(svc.connTimeout)
+	transport.DisableKeepAlives = true // less memory leak, less errors
 
 	svc.client = &http.Client{
 		Transport: transport,
@@ -66,18 +67,18 @@ func NewHTTPService(ports []int, connTimeout time.Duration, paths []string, head
 }
 
 func (s *HTTPService) check(uri url.URL) (bool, error) {
-	r, err := s.client.Get(uri.String())
+	response, err := s.client.Get(uri.String())
 	if err != nil {
 		return false, err
 	}
 
-	defer r.Body.Close()
+	defer response.Body.Close()
 
-	if r.StatusCode > 400 {
+	if response.StatusCode > 400 {
 		return false, nil
 	}
 
-	for k, values := range r.Header {
+	for k, values := range response.Header {
 		for _, v := range values {
 			if s.headerReg != nil && s.headerReg.MatchString(k+": "+v) {
 				return true, nil
@@ -85,18 +86,18 @@ func (s *HTTPService) check(uri url.URL) (bool, error) {
 		}
 	}
 
-	if r.ContentLength == -1 || r.ContentLength > 1024*1024 {
+	if response.ContentLength == -1 || response.ContentLength > 1024*1024 {
 		return false, nil
 	}
 
-	reader := io.LimitReader(r.Body, 1024*1024)
-	b, err := io.ReadAll(reader)
+	reader := io.LimitReader(response.Body, 1024*1024)
+	body, err := io.ReadAll(reader)
 
 	if err != nil {
 		return false, nil
 	}
 
-	if s.bodyReg != nil && s.bodyReg.Match(b) {
+	if s.bodyReg != nil && s.bodyReg.Match(body) {
 		return true, nil
 	}
 

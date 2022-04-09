@@ -29,7 +29,7 @@ var (
 )
 
 var (
-    headerReg, bodyReg string
+	headerReg, bodyReg string
 )
 
 var (
@@ -162,12 +162,12 @@ func main() {
 
 	var ipSource <-chan net.IP
 	if ipList != "" {
-        list, err := utils.LoadInput(ipList)
-        if err != nil {
+		list, err := utils.LoadInput(ipList)
+		if err != nil {
 			utils.EPrintln("[E] IP list", err)
 			return
-        }
-        ipSource = generators.RandomHostsFromListGen(list)
+		}
+		ipSource = generators.RandomHostsFromListGen(list)
 	} else if cidrNetwork == "" {
 		ipGenerator := generators.NewIPGenerator(4, randomIPsCount)
 		ipSource = ipGenerator.Generate()
