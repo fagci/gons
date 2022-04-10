@@ -7,15 +7,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/fagci/gonr/generators"
 	"github.com/fagci/gons/protocol"
 	"github.com/fagci/gons/utils"
 )
 
 type RTSPService struct {
 	*Service
-	Ports   []int
-	timeout time.Duration
-	paths   []string
+	Ports    []int
+	timeout  time.Duration
+	paths    []string
+	fakePath string
 }
 
 func NewRTSPService(ports []int, timeout time.Duration, paths []string) *RTSPService {
@@ -23,16 +25,17 @@ func NewRTSPService(ports []int, timeout time.Duration, paths []string) *RTSPSer
 		ports = append(ports, 554)
 	}
 	s := &RTSPService{
-		timeout: timeout,
-		paths:   paths,
-		Service: &Service{Ports: ports},
+		timeout:  timeout,
+		paths:    paths,
+		Service:  &Service{Ports: ports},
+		fakePath: generators.RandomPath(6, 12),
 	}
 	s.ServiceInterface = interface{}(s).(ServiceInterface)
 	return s
 }
 func (s *RTSPService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.WaitGroup) {
 	defer wg.Done()
-	r := protocol.NewRTSP(&addr, s.paths, s.timeout)
+	r := protocol.NewRTSP(&addr, s.paths, s.fakePath, s.timeout)
 	if res, err := r.Check(); err == nil {
 		ch <- HostResult{
 			Addr:    &addr,

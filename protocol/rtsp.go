@@ -9,16 +9,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fagci/gonr/generators"
 	"github.com/fagci/gons/network"
 )
 
 type RTSP struct {
-	timeout time.Duration
-	conn    net.Conn
-	cseq    int
-	paths   []string
-	addr    string
+	timeout  time.Duration
+	conn     net.Conn
+	cseq     int
+	paths    []string
+	addr     string
+	fakePath string
 }
 
 const _RTSP_TPL = "%s %s RTSP/1.0\r\n" +
@@ -64,6 +64,7 @@ func (r *RTSP) Query(path string) string {
 
 func (r *RTSP) Check() (url.URL, error) {
 	var err error
+	var code int
 	var url url.URL
 
 	if r.conn, err = network.DialTimeout("tcp", r.addr, r.timeout); err != nil {
@@ -76,17 +77,12 @@ func (r *RTSP) Check() (url.URL, error) {
 		return url, err
 	}
 
-	var code int
-	code, err = r.Request(r.Query(generators.RandomPath(6, 12)))
+	code, err = r.Request(r.Query(r.fakePath))
 	if err != nil {
 		return url, err
 	}
 
 	if code == 200 {
-		code, err = r.Request("/")
-		if err == nil && code == 200 {
-			return r.result("/"), nil
-		}
 		return url, errors.New("RTSP: fake")
 	}
 
@@ -114,10 +110,11 @@ func (r *RTSP) result(path string) url.URL {
 	}
 }
 
-func NewRTSP(addr net.Addr, paths []string, timeout time.Duration) *RTSP {
+func NewRTSP(addr net.Addr, paths []string, fakePath string, timeout time.Duration) *RTSP {
 	return &RTSP{
-		timeout: timeout,
-		paths:   paths,
-		addr:    addr.String(),
+		timeout:  timeout,
+		paths:    paths,
+		addr:     addr.String(),
+		fakePath: fakePath,
 	}
 }
