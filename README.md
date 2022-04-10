@@ -29,8 +29,8 @@
 
 ### HTTP mjpeg
 
-![](http://185.85.25.87/mjpg/video.mjpg)
-![](http://45.66.52.41/mjpg/video.mjpg)
+[One](http://185.85.25.87/mjpg/video.mjpg)  
+[Two](http://45.66.52.41/mjpg/video.mjpg)
 
 ## Usage
 
