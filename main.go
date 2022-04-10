@@ -169,7 +169,7 @@ func main() {
 		}
 		ipSource = generators.RandomHostsFromListGen(list)
 	} else if cidrNetwork == "" {
-		ipGenerator := generators.NewIPGenerator(4, randomIPsCount)
+		ipGenerator := generators.NewIPGenerator(512, randomIPsCount)
 		ipSource = ipGenerator.Generate()
 	} else {
 		ipSource = generators.RandomHostsFromCIDRGen(cidrNetwork)
