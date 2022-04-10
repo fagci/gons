@@ -30,6 +30,14 @@ To get smaller binary:
 go build -ldflags="-s -w"
 ```
 
+## Loot
+
+<img src=".loot/rtsp1.jpg" width="33%">
+<img src=".loot/rtsp2.jpg" width="33%">
+<img src=".loot/rtsp3.jpg" width="33%">
+<img src=".loot/rtsp4.jpg" width="33%">
+<img src=".loot/rtsp5.jpg" width="33%">
+
 ## Usage
 
 Generate 5 random wan IPs:
