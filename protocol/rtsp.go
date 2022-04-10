@@ -40,7 +40,7 @@ func (r *RTSP) Request(req string) (cose int, err error) {
 	}
 
 	f := strings.Fields(string(data[:n]))
-	if len(f) >= 2 && f[0][:5] == "RTSP/" {
+	if len(f) >= 2 && strings.HasPrefix(f[0], "RTSP/") {
 		return strconv.Atoi(f[1])
 	}
 
