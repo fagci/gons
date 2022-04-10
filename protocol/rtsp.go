@@ -26,23 +26,21 @@ const _RTSP_TPL = "%s %s RTSP/1.0\r\n" +
 	"CSeq: %d\r\n" +
 	"User-Agent: Lavf59.16.100\r\n\r\n"
 
-func (r *RTSP) Request(req string) (int, error) {
-	if e := r.conn.SetDeadline(time.Now().Add(RW_TIMEOUT)); e != nil {
-		return 0, e
+func (r *RTSP) Request(req string) (cose int, err error) {
+	_ = r.conn.SetDeadline(time.Now().Add(RW_TIMEOUT))
+
+	if _, err = r.conn.Write([]byte(req)); err != nil {
+		return
 	}
 
-	if _, e := r.conn.Write([]byte(req)); e != nil {
-		return 0, e
+	data := make([]byte, 1024)
+	n, err := r.conn.Read(data)
+	if err != nil {
+		return
 	}
 
-	responseBytes := make([]byte, 512)
-	n, e := r.conn.Read(responseBytes)
-	if e != nil {
-		return 0, e
-	}
-
-	f := strings.Fields(string(responseBytes[:n]))
-	if len(f) >= 2 && strings.HasPrefix(f[0], "RTSP") {
+	f := strings.Fields(string(data[:n]))
+	if len(f) >= 2 && f[0][:5] == "RTSP/" {
 		return strconv.Atoi(f[1])
 	}
 
@@ -50,32 +48,23 @@ func (r *RTSP) Request(req string) (int, error) {
 }
 
 func (r *RTSP) Query(path string) string {
-	method := "DESCRIBE"
-
-	if path == "*" {
-		method = "OPTIONS"
-	} else {
-		path = fmt.Sprintf("rtsp://%s%s", r.addr, path)
-	}
-
 	r.cseq++
-	return fmt.Sprintf(_RTSP_TPL, method, path, r.cseq)
+
+	return fmt.Sprintf(_RTSP_TPL, "DESCRIBE", fmt.Sprintf("rtsp://%s%s", r.addr, path), r.cseq)
 }
 
-func (r *RTSP) Check() (url.URL, error) {
-	var err error
+func (r *RTSP) Check() (url url.URL, err error) {
 	var code int
-	var url url.URL
 
 	if r.conn, err = network.DialTimeout("tcp", r.addr, r.timeout); err != nil {
-		return url, err
+		return
 	}
 
 	defer r.conn.Close()
 
 	code, err = r.Request(r.Query(r.fakePath))
 	if err != nil {
-		return url, err
+		return
 	}
 
 	if code == 200 {
@@ -85,7 +74,7 @@ func (r *RTSP) Check() (url.URL, error) {
 	for _, path := range r.paths {
 		code, err = r.Request(r.Query(path))
 		if err != nil {
-			return url, err
+			return
 		}
 		if code == 401 {
 			return url, errors.New("RTSP: unauthorized")
