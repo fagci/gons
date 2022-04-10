@@ -18,25 +18,12 @@
 [![DUMELS Diagram](https://www.dumels.com/api/v1/badge/e32e5a35-9583-4902-aeef-82011e033de1)](https://www.dumels.com/diagram/e32e5a35-9583-4902-aeef-82011e033de1)
 [![Go Report Card](https://goreportcard.com/badge/github.com/fagci/gons)](https://goreportcard.com/report/github.com/fagci/gons)
 
-## Build
-
-```sh
-go build
-```
-
-To get smaller binary:
-
-```sh
-go build -ldflags="-s -w"
-```
-
 ## Loot
 
 <table cellpadding="0" cellspacing="0" border="0">
 <tr><td><img src=".loot/rtsp1.jpg"></td><td><img src=".loot/rtsp2.jpg"></td><td><img src=".loot/rtsp3.jpg"></td></tr>
 <tr><td><img src=".loot/rtsp4.jpg"></td><td><img src=".loot/rtsp5.jpg"></td><td>&nbsp;</td></tr>
 </table>
-
 
 ## Usage
 
@@ -96,6 +83,20 @@ Search for public mjpeg webcams:
 
 ```sh
 ./gons -s http -d ./assets/data/http-cam-paths.txt -rh "(image/jpeg|multipart/x-mixed-replace)"
+```
+
+## Build
+
+You can download [latest release](https://github.com/fagci/gons/releases), or build yourself:
+
+```sh
+go build
+```
+
+To get smaller binary:
+
+```sh
+go build -ldflags="-s -w"
 ```
 
 ## Testing
