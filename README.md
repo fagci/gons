@@ -27,6 +27,11 @@
 <tr><td><img src=".loot/rtsp4.jpg"></td><td><img src=".loot/rtsp5.jpg"></td><td>&nbsp;</td></tr>
 </table>
 
+### HTTP mjpeg
+
+![](http://185.85.25.87/mjpg/video.mjpg)
+![](http://45.66.52.41/mjpg/video.mjpg)
+
 ## Usage
 
 Generate 5 random wan IPs:
