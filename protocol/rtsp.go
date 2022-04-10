@@ -73,10 +73,6 @@ func (r *RTSP) Check() (url.URL, error) {
 
 	defer r.conn.Close()
 
-	if _, err = r.Request(r.Query("*")); err != nil {
-		return url, err
-	}
-
 	code, err = r.Request(r.Query(r.fakePath))
 	if err != nil {
 		return url, err
