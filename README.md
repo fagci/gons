@@ -32,11 +32,11 @@ go build -ldflags="-s -w"
 
 ## Loot
 
-<img src=".loot/rtsp1.jpg" width="33%">
-<img src=".loot/rtsp2.jpg" width="33%">
-<img src=".loot/rtsp3.jpg" width="33%">
-<img src=".loot/rtsp4.jpg" width="33%">
-<img src=".loot/rtsp5.jpg" width="33%">
+<table cellpadding="0" cellspacing="0" border="0">
+<tr><td><img src=".loot/rtsp1.jpg"></td><td><img src=".loot/rtsp2.jpg"></td><td><img src=".loot/rtsp3.jpg"></td></tr>
+<tr><td><img src=".loot/rtsp4.jpg"></td><td><img src=".loot/rtsp5.jpg"></td><td>&nbsp;</td></tr>
+</table>
+
 
 ## Usage
 
