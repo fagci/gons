@@ -71,5 +71,5 @@ func RunCommand(command string, wg *sync.WaitGroup, timeout time.Duration, flags
 }
 
 func FilterValueInQuotes(v string) string {
-    return forbiddenInQuotesCharsRegexp.ReplaceAllString(v, "")
+	return forbiddenInQuotesCharsRegexp.ReplaceAllString(v, "")
 }

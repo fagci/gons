@@ -10,7 +10,7 @@ type DummyService struct {
 }
 
 func NewDummyService() *DummyService {
-    s := &DummyService{Service: &Service{}}
+	s := &DummyService{Service: &Service{}}
 	s.ServiceInterface = interface{}(s).(ServiceInterface)
 	return s
 }

@@ -129,7 +129,7 @@ func process(processor *services.Processor) {
 		for result := range results {
 			wg.Add(1)
 			guard <- struct{}{}
-            sp.Stop()
+			sp.Stop()
 			go func(cmd string) {
 				utils.RunCommand(cmd, wg, callbackTimeout, cbFlags)
 				if len(guard) == 1 {
