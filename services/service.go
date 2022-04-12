@@ -18,15 +18,26 @@ type Service struct {
 var _ ServiceInterface = &Service{}
 
 func (s *Service) Check(ip net.IP, ch chan<- HostResult, swg *sync.WaitGroup) {
+	var wg sync.WaitGroup
+
+    // coz we are netstalkers, not DoSers
+    portRateLimiter := make(chan struct{}, 8)
+
 	if len(s.Ports) == 0 {
 		s.Ports = []int{0}
 	}
-	defer swg.Done()
-	var wg sync.WaitGroup
+
+	wg.Add(len(s.Ports))
+
 	for _, port := range s.Ports {
 		addr := net.TCPAddr{IP: ip, Port: port}
-		wg.Add(1)
-		go s.ServiceInterface.ScanAddr(addr, ch, &wg)
+        portRateLimiter <- struct{}{}
+        go func(){
+            s.ServiceInterface.ScanAddr(addr, ch, &wg)
+            <-portRateLimiter
+        }()
 	}
+
 	wg.Wait()
+	swg.Done() // w/o defer to speedup frequent calls
 }

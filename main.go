@@ -81,6 +81,13 @@ func setupSercices(processor *services.Processor) {
 			svc   services.ServiceInterface
 		)
 
+		service := strings.ToLower(service)
+
+		switch service {
+		case "portscan":
+			fuzzDict = ""
+		}
+
 		if fuzzDict != "" {
 			paths, err = loaders.FileToArray(fuzzDict)
 			if err != nil {
@@ -91,7 +98,7 @@ func setupSercices(processor *services.Processor) {
 
 		ports := utils.ParseRange(scanPorts)
 
-		switch strings.ToLower(service) {
+		switch service {
 		case "http":
 			svc = services.NewHTTPService(ports, connTimeout, paths, headerReg, bodyReg)
 		case "rtsp":
@@ -103,7 +110,7 @@ func setupSercices(processor *services.Processor) {
 		if svc != nil {
 			utils.EPrintln("service:     ", service)
 			if len(ports) != 0 {
-				utils.EPrintln("ports:       ", ports)
+				utils.EPrintln("ports:       ", scanPorts)
 			}
 			utils.EPrintln("workers:     ", scanWorkers)
 			utils.EPrintln("conn timeout:", connTimeout)
@@ -138,15 +145,15 @@ func process(processor *services.Processor) {
 
 	utils.EPrint("[i] callback set")
 	if !callbackE {
-		utils.EPrint(", no err")
+		utils.EPrint(", err")
 		cbFlags = cbFlags.Set(utils.ERR)
 	}
 	if !callbackW {
-		utils.EPrint(", no warn")
+		utils.EPrint(", warn")
 		cbFlags = cbFlags.Set(utils.WARN)
 	}
 	if !callbackI {
-		utils.EPrint(", no info")
+		utils.EPrint(", info")
 		cbFlags = cbFlags.Set(utils.INFO)
 	}
 	utils.EPrintln()
