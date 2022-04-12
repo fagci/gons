@@ -40,6 +40,10 @@ var (
 )
 
 func init() {
+	utils.EPrintln("=========================")
+	utils.EPrintln("NetStalking tool by fagci")
+	utils.EPrintln("-------------------------")
+
 	flag.StringVar(&iface, "i", "", "use specific network interface")
 	flag.Int64Var(&randomIPsCount, "n", -1, "generate N random WAN IPs")
 	flag.StringVar(&cidrNetwork, "net", "", "Network in CIDR notation to scan in random order")
@@ -71,8 +75,12 @@ func setupSercices(processor *services.Processor) {
 	if service == "" {
 		processor.AddService(services.NewDummyService())
 	} else {
-		var paths []string
-		var err error
+		var (
+			err   error
+			paths []string
+			svc   services.ServiceInterface
+		)
+
 		if fuzzDict != "" {
 			paths, err = loaders.FileToArray(fuzzDict)
 			if err != nil {
@@ -82,8 +90,6 @@ func setupSercices(processor *services.Processor) {
 		}
 
 		ports := utils.ParseRange(scanPorts)
-
-		var svc services.ServiceInterface
 
 		switch strings.ToLower(service) {
 		case "http":
@@ -95,57 +101,75 @@ func setupSercices(processor *services.Processor) {
 		}
 
 		if svc != nil {
-			utils.EPrintln("[i] Using", service)
-			utils.EPrintln("[i] Workers", scanWorkers)
-			if randomIPsCount > 0 {
-				utils.EPrintln("[i] Random IPs count", randomIPsCount)
+			utils.EPrintln("service:     ", service)
+			if len(ports) != 0 {
+				utils.EPrintln("ports:       ", ports)
 			}
+			utils.EPrintln("workers:     ", scanWorkers)
+			utils.EPrintln("conn timeout:", connTimeout)
 			processor.AddService(svc)
+		}
+		if randomIPsCount > 0 {
+			utils.EPrintln("max hosts:   ", randomIPsCount)
+		}
+		if svc != nil && fuzzDict != "" {
+			utils.EPrintln("dict:", fuzzDict)
 		}
 	}
 }
 
 func process(processor *services.Processor) {
 	var cbFlags utils.Flags
-	if !callbackE {
-		cbFlags = cbFlags.Set(utils.ERR)
-	}
-	if !callbackW {
-		cbFlags = cbFlags.Set(utils.WARN)
-	}
-	if !callbackI {
-		cbFlags = cbFlags.Set(utils.INFO)
-	}
 
 	sp := utils.Spinner{}
-	sp.Start()
-	defer sp.Stop()
 
 	results := processor.Process()
-
-	if callback != "" {
-		wg := new(sync.WaitGroup)
-		guard := make(chan struct{}, callbackConcurrency)
-		for result := range results {
-			wg.Add(1)
-			guard <- struct{}{}
-			sp.Stop()
-			go func(cmd string) {
-				utils.RunCommand(cmd, wg, callbackTimeout, cbFlags)
-				if len(guard) == 1 {
-					sp.Start()
-				}
-				<-guard
-			}(result.ReplaceVars(callback))
-		}
-		wg.Wait()
-	} else {
+	if callback == "" {
+		utils.EPrintln("=========================")
+		sp.Start()
+		defer sp.Stop()
 		for result := range results {
 			sp.Stop()
 			fmt.Println(&result)
 			sp.Start()
 		}
+		return
 	}
+
+	utils.EPrint("[i] callback set")
+	if !callbackE {
+		utils.EPrint(", no err")
+		cbFlags = cbFlags.Set(utils.ERR)
+	}
+	if !callbackW {
+		utils.EPrint(", no warn")
+		cbFlags = cbFlags.Set(utils.WARN)
+	}
+	if !callbackI {
+		utils.EPrint(", no info")
+		cbFlags = cbFlags.Set(utils.INFO)
+	}
+	utils.EPrintln()
+
+	utils.EPrintln("=========================")
+	sp.Start()
+	defer sp.Stop()
+
+	wg := new(sync.WaitGroup)
+	guard := make(chan struct{}, callbackConcurrency)
+	for result := range results {
+		wg.Add(1)
+		guard <- struct{}{}
+		sp.Stop()
+		go func(cmd string) {
+			utils.RunCommand(cmd, wg, callbackTimeout, cbFlags)
+			if len(guard) == 1 {
+				sp.Start()
+			}
+			<-guard
+		}(result.ReplaceVars(callback))
+	}
+	wg.Wait()
 }
 
 func main() {
