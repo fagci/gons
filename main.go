@@ -71,7 +71,7 @@ func init() {
 	flag.BoolVar(&callbackE, "cbde", false, "disable callback errors")
 }
 
-func setupSercices(processor *services.Processor) {
+func setupServices(processor *services.Processor) {
 	if service == "" {
 		processor.AddService(services.NewDummyService())
 	} else {
@@ -83,21 +83,14 @@ func setupSercices(processor *services.Processor) {
 
 		service := strings.ToLower(service)
 
-		switch service {
-		case "portscan":
-			fuzzDict = ""
-			break
-		case "rtsp":
-			if fuzzDict == "" {
+		if fuzzDict == "" {
+			switch service {
+			case "rtsp":
 				fuzzDict = "./assets/data/rtsp-paths.txt"
-			}
-			break
-		case "http":
-			if fuzzDict == "" {
+			case "http":
 				fuzzDict = "./assets/data/http-cam-paths.txt"
 				headerReg = "(multipart/x-mixed-replace|image/jpeg)"
 			}
-			break
 		}
 
 		if fuzzDict != "" {
@@ -141,12 +134,12 @@ func process(processor *services.Processor) {
 	var cbFlags utils.Flags
 
 	sp := utils.Spinner{}
+	defer sp.Stop()
 
 	results := processor.Process()
 	if callback == "" {
 		utils.EPrintln("=========================")
 		sp.Start()
-		defer sp.Stop()
 		for result := range results {
 			sp.Stop()
 			fmt.Println(&result)
@@ -174,7 +167,6 @@ func process(processor *services.Processor) {
 
 	utils.EPrintln("=========================")
 	sp.Start()
-	defer sp.Stop()
 
 	wg := new(sync.WaitGroup)
 	guard := make(chan struct{}, callbackConcurrency)
@@ -193,9 +185,7 @@ func process(processor *services.Processor) {
 	wg.Wait()
 }
 
-func main() {
-	flag.Parse()
-
+func setupInterface() {
 	if iface != "" {
 		if err := network.SetInterface(iface); err != nil {
 			utils.EPrintln("[E] iface", err)
@@ -203,6 +193,12 @@ func main() {
 		}
 		utils.EPrintln("[i] Iface", iface)
 	}
+}
+
+func main() {
+	flag.Parse()
+
+	setupInterface()
 
 	var ipSource <-chan net.IP
 	if ipList != "" {
@@ -221,6 +217,6 @@ func main() {
 
 	processor := services.NewProcessor(ipSource, scanWorkers)
 
-	setupSercices(processor)
+	setupServices(processor)
 	process(processor)
 }
