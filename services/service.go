@@ -7,7 +7,7 @@ import (
 
 type ServiceInterface interface {
 	ScanAddr(net.TCPAddr, chan<- HostResult, *sync.WaitGroup)
-	Check(net.IP, chan<- HostResult, *sync.WaitGroup)
+	Check(net.IP, chan<- HostResult)
 }
 
 type Service struct {
@@ -17,11 +17,11 @@ type Service struct {
 
 var _ ServiceInterface = &Service{}
 
-func (s *Service) Check(ip net.IP, ch chan<- HostResult, swg *sync.WaitGroup) {
+func (s *Service) Check(ip net.IP, ch chan<- HostResult) {
 	var wg sync.WaitGroup
 
-    // coz we are netstalkers, not DoSers
-    portRateLimiter := make(chan struct{}, 8)
+	// coz we are netstalkers, not DoSers
+	portRateLimiter := make(chan struct{}, 8)
 
 	if len(s.Ports) == 0 {
 		s.Ports = []int{0}
@@ -31,13 +31,12 @@ func (s *Service) Check(ip net.IP, ch chan<- HostResult, swg *sync.WaitGroup) {
 
 	for _, port := range s.Ports {
 		addr := net.TCPAddr{IP: ip, Port: port}
-        portRateLimiter <- struct{}{}
-        go func(){
-            s.ServiceInterface.ScanAddr(addr, ch, &wg)
-            <-portRateLimiter
-        }()
+		portRateLimiter <- struct{}{}
+		go func() {
+			s.ServiceInterface.ScanAddr(addr, ch, &wg)
+			<-portRateLimiter
+		}()
 	}
 
 	wg.Wait()
-	swg.Done() // w/o defer to speedup frequent calls
 }

@@ -36,7 +36,8 @@ func NewRTSPService(ports []int, timeout time.Duration, paths []string) *RTSPSer
 func (s *RTSPService) ScanAddr(addr net.TCPAddr, ch chan<- HostResult, wg *sync.WaitGroup) {
 	defer wg.Done()
 	r := protocol.NewRTSP(&addr, s.paths, s.fakePath, s.timeout)
-	if res, err := r.Check(); err == nil {
+	res, err := r.Check()
+	if err == nil {
 		ch <- HostResult{
 			Addr:    &addr,
 			Details: &RTSPResult{Url: res},

@@ -48,8 +48,8 @@ func init() {
 	flag.Int64Var(&randomIPsCount, "n", -1, "generate N random WAN IPs")
 	flag.StringVar(&cidrNetwork, "net", "", "Network in CIDR notation to scan in random order")
 	flag.StringVar(&ipList, "list", "", "IP/networks list (CIDR) to scan in random order")
-	flag.IntVar(&scanWorkers, "w", 64, "workers count")
-	flag.IntVar(&scanWorkers, "workers", 64, "workers count")
+	flag.IntVar(&scanWorkers, "w", 4096, "workers count")
+	flag.IntVar(&scanWorkers, "workers", 4096, "workers count")
 	flag.DurationVar(&connTimeout, "t", 700*time.Millisecond, "scan connect timeout")
 	flag.DurationVar(&connTimeout, "timeout", 700*time.Millisecond, "scan connect timeout")
 
@@ -145,18 +145,20 @@ func process(processor *services.Processor) {
 
 	utils.EPrint("[i] callback set")
 	if !callbackE {
-		utils.EPrint(", err")
+		utils.EPrint(" [err]")
 		cbFlags = cbFlags.Set(utils.ERR)
 	}
 	if !callbackW {
-		utils.EPrint(", warn")
+		utils.EPrint(" [warn]")
 		cbFlags = cbFlags.Set(utils.WARN)
 	}
 	if !callbackI {
-		utils.EPrint(", info")
+		utils.EPrint(" [info]")
 		cbFlags = cbFlags.Set(utils.INFO)
 	}
 	utils.EPrintln()
+	utils.EPrintln("    cb concurrency:", callbackConcurrency)
+	utils.EPrintln("    cb timeout:", callbackTimeout)
 
 	utils.EPrintln("=========================")
 	sp.Start()
