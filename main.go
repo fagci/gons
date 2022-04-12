@@ -57,7 +57,7 @@ func init() {
 	flag.StringVar(&scanPorts, "ports", "", "scan ports on every rarget")
 
 	flag.StringVar(&service, "s", "", "check service (rtsp, ...)")
-	flag.StringVar(&fuzzDict, "d", "./assets/data/rtsp-paths.txt", "dictionary to fuzz")
+	flag.StringVar(&fuzzDict, "d", "", "dictionary to fuzz")
 
 	flag.StringVar(&headerReg, "rh", "", "Regexp for header")
 	flag.StringVar(&bodyReg, "rb", "", "Regexp for body")
@@ -86,6 +86,18 @@ func setupSercices(processor *services.Processor) {
 		switch service {
 		case "portscan":
 			fuzzDict = ""
+			break
+		case "rtsp":
+			if fuzzDict == "" {
+				fuzzDict = "./assets/data/rtsp-paths.txt"
+			}
+			break
+		case "http":
+			if fuzzDict == "" {
+				fuzzDict = "./assets/data/http-cam-paths.txt"
+				headerReg = "(multipart/x-mixed-replace|image/jpeg)"
+			}
+			break
 		}
 
 		if fuzzDict != "" {

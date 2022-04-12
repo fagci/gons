@@ -21,7 +21,7 @@ func (s *Service) Check(ip net.IP, ch chan<- HostResult) {
 	var wg sync.WaitGroup
 
 	// coz we are netstalkers, not DoSers
-	portRateLimiter := make(chan struct{}, 8)
+	portRateLimiter := make(chan struct{}, 16)
 
 	if len(s.Ports) == 0 {
 		s.Ports = []int{0}
