@@ -85,7 +85,7 @@ func setupServices(processor *services.Processor) {
 
 		service := strings.ToLower(service)
 
-		if fuzzDict == "" {
+		if path == "" && fuzzDict == "" {
 			switch service {
 			case "rtsp":
 				fuzzDict = "./assets/data/rtsp-paths.txt"
