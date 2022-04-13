@@ -29,8 +29,8 @@
 
 ### HTTP mjpeg
 
-[One](http://185.85.25.87/mjpg/video.mjpg)  
-[Two](http://45.66.52.41/mjpg/video.mjpg)
+[IT, Liguria, Albenga](http://185.85.25.87/mjpg/video.mjpg) - mountains, houses   
+[ES, Murcia, Murcia](http://45.66.52.41/mjpg/video.mjpg) - golf field
 
 ## Usage
 
