@@ -29,13 +29,17 @@
 [IT, Liguria, Albenga](http://185.85.25.87/mjpg/video.mjpg) - mountains, houses   
 [ES, Murcia, Murcia](http://45.66.52.41/mjpg/video.mjpg) - golf field
 
-## Usage
+## Usage examples
+
+### General
 
 Generate 5 random wan IPs:
 
 ```sh
 ./gons -n 5
 ```
+
+### RTSP
 
 Netrandom find possible RTSP sources:
 
@@ -49,11 +53,15 @@ Take snapshots from RTSP stream and write source URL in metadata:
 ./gons -s rtsp -cb 'bash ./assets/callbacks/capture.sh "{result}" "/sdcard/Pictures/RTSP/" "{slug}"'
 ```
 
+### Custom ports
+
 Scan 1024 random WAN IPs for open VNC ports:
 
 ```sh
 ./gons -n 1024 -s portscan -ports 5900-5902
 ```
+
+### Subnets
 
 Scan local subnet for http(s) servers:
 
@@ -76,6 +84,8 @@ Scan list of networks and hosts:
 ```sh
 cat city_cidrs.txt | ./gons -s rtsp -list -
 ```
+
+### HTTP, regexps
 
 Search for public resources over http:
 
