@@ -22,7 +22,7 @@
 
 ### RTSP
 
-<img src=".loot/rtsp1.jpg" width="24%"> <img src=".loot/rtsp2.jpg" width="24%"> <img src=".loot/rtsp3.jpg" width="24%"> <img src=".loot/rtsp4.jpg" width="24%"> <img src=".loot/rtsp5.jpg" width="24%">
+<img src=".loot/rtsp2.jpg" width="24%"> <img src=".loot/rtsp3.jpg" width="24%"> <img src=".loot/rtsp4.jpg" width="24%"> <img src=".loot/rtsp5.jpg" width="24%">
 
 ### HTTP mjpeg
 
