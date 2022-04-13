@@ -1,4 +1,4 @@
-# Netstalking things in GO
+# Netstalking tools
 
 ## Features
 
