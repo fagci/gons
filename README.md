@@ -102,6 +102,12 @@ Search for public mjpeg webcams:
 ./gons -s http -d ./assets/data/http-cam-paths.txt -rh "(image/jpeg|multipart/x-mixed-replace)"
 ```
 
+Get disallowed paths in robots.txt:
+
+```sh
+./gons -s http -path /robots.txt -rb 'Disallow:\s+(\S{2,})'
+```
+
 ## Build
 
 You can download [latest release](https://github.com/fagci/gons/releases), or build yourself:
