@@ -26,6 +26,7 @@ var (
 	scanPorts      string
 	service        string
 	fuzzDict       string
+	path           string
 )
 
 var (
@@ -58,6 +59,7 @@ func init() {
 
 	flag.StringVar(&service, "s", "", "check service (rtsp, ...)")
 	flag.StringVar(&fuzzDict, "d", "", "dictionary to fuzz")
+	flag.StringVar(&path, "path", "", "single path to make request")
 
 	flag.StringVar(&headerReg, "rh", "", "Regexp for header")
 	flag.StringVar(&bodyReg, "rb", "", "Regexp for body")
@@ -93,6 +95,11 @@ func setupServices(processor *services.Processor) {
 			}
 		}
 
+		if path != "" {
+			fuzzDict = ""
+			paths = []string{path}
+		}
+
 		if fuzzDict != "" {
 			paths, err = loaders.FileToArray(fuzzDict)
 			if err != nil {
@@ -124,8 +131,13 @@ func setupServices(processor *services.Processor) {
 		if randomIPsCount > 0 {
 			utils.EPrintln("max hosts:   ", randomIPsCount)
 		}
-		if svc != nil && fuzzDict != "" {
-			utils.EPrintln("dict:", fuzzDict)
+		if svc != nil {
+			if fuzzDict != "" {
+				utils.EPrintln("dict:", fuzzDict)
+			}
+			if path != "" {
+				utils.EPrintln("path:", path)
+			}
 		}
 	}
 }
