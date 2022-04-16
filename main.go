@@ -117,6 +117,8 @@ func setupServices(processor *services.Processor) {
 			svc = services.NewRTSPService(ports, connTimeout, paths)
 		case "portscan":
 			svc = services.NewPortscanService(ports, connTimeout)
+		case "banner":
+			svc = services.NewBannerService(ports, connTimeout)
 		}
 
 		if svc != nil {
