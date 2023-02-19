@@ -90,8 +90,7 @@ func setupServices(processor *services.Processor) {
 			case "rtsp":
 				fuzzDict = "./assets/data/rtsp-paths.txt"
 			case "http":
-				fuzzDict = "./assets/data/http-cam-paths.txt"
-				headerReg = "(multipart/x-mixed-replace|image/jpeg)"
+				path = "/"
 			}
 		}
 
